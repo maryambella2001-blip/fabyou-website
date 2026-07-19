@@ -19,13 +19,9 @@
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
-        h1 {
-            text-align: center;
-            color: #222;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
+        h1 { text-align: center; color: #222; }
+        h3 { margin-top: 25px; border-bottom: 2px solid #eee; padding-bottom: 8px; }
+        .form-group { margin-bottom: 15px; }
         input, select {
             width: 100%;
             padding: 10px;
@@ -44,12 +40,11 @@
             cursor: pointer;
             font-weight: bold;
             font-size: 14px;
+            transition: 0.2s;
         }
-        button:hover { opacity: 0.85; }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .product-list {
-            margin-top: 40px;
-        }
+        button:hover:not(:disabled) { opacity: 0.85; }
+        button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .product-list { margin-top: 30px; }
         .product-item {
             background: #f9f9f9;
             padding: 15px;
@@ -68,6 +63,7 @@
             cursor: pointer;
             font-weight: bold;
         }
+        .delete-btn:hover:not(:disabled) { opacity: 0.85; }
         .login-box {
             max-width: 400px;
             margin: 80px auto;
@@ -88,13 +84,31 @@
         .status.success { background: #d4edda; color: #155724; }
         .status.error { background: #f8d7da; color: #721c24; }
         .small { font-size: 12px; color: #666; }
-        .token-section { background: #fff8e1; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #ffe082; }
         .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #ccc; border-top-color: #000; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; }
         @keyframes spin { to { transform: rotate(360deg); } }
         img.product-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
+        .overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.7);
+            display: none;
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .overlay.show { display: flex; }
+        .overlay .msg {
+            background: #222; color: white; padding: 20px 30px;
+            border-radius: 10px; font-weight: bold;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body>
+
+    <!-- Loading overlay (يمنع كاع الكليك ملي كاين عملية) -->
+    <div class="overlay" id="overlay">
+        <div class="msg"><span class="spinner"></span> &nbsp;<span id="overlay-msg">جاري المعالجة...</span></div>
+    </div>
 
     <!-- Login Screen -->
     <div id="login-screen">
@@ -121,7 +135,7 @@
             </div>
             <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxx" style="margin: 10px 0; width: 80%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
             <br>
-            <button onclick="saveToken()">Save & Continue</button>
+            <button onclick="saveToken()">Save &amp; Continue</button>
             <br><br>
             <p class="small">The token is saved only in your browser (localStorage).</p>
         </div>
@@ -160,11 +174,12 @@
 
             <div class="product-list">
                 <h3>📋 Current Products <span id="product-count" class="small"></span></h3>
+                <button onclick="loadProducts()" style="background:#333;font-size:12px;padding:8px 15px;margin-bottom:15px;">🔄 Refresh List</button>
                 <div id="productList"><p class="small">Loading...</p></div>
             </div>
 
             <br>
-            <button onclick="clearAllProducts()" style="background: #e63946;">🗑️ Delete All Products</button>
+            <button id="clearBtn" onclick="clearAllProducts()" style="background: #e63946;">🗑️ Delete All Products</button>
         </div>
     </div>
 
@@ -179,21 +194,44 @@
             imagesFolder: "images"
         };
 
-        // ================= TOKEN MANAGEMENT =================
-        function getToken() {
-            return localStorage.getItem("fabyou_github_token") || "";
-        }
-
-        function saveToken() {
-            const token = document.getElementById("tokenInput").value.trim();
-            if (!token) {
-                alert("Please paste your token!");
+        // ================= 🔒 GLOBAL LOCK (يمنع العمليات المتزامنة) =================
+        let busy = false;
+        async function withLock(msg, fn) {
+            if (busy) {
+                showStatus("⏳ كاينة عملية أخرى جارية... عقل حتى تسالي.", "loading");
                 return;
             }
+            busy = true;
+            showOverlay(msg);
+            setAllButtonsDisabled(true);
+            try {
+                return await fn();
+            } finally {
+                busy = false;
+                hideOverlay();
+                setAllButtonsDisabled(false);
+            }
+        }
+
+        function setAllButtonsDisabled(disabled) {
+            document.querySelectorAll("button").forEach(b => b.disabled = disabled);
+        }
+        function showOverlay(msg) {
+            document.getElementById("overlay-msg").textContent = msg || "جاري المعالجة...";
+            document.getElementById("overlay").classList.add("show");
+        }
+        function hideOverlay() {
+            document.getElementById("overlay").classList.remove("show");
+        }
+
+        // ================= TOKEN =================
+        function getToken() { return localStorage.getItem("fabyou_github_token") || ""; }
+        function saveToken() {
+            const token = document.getElementById("tokenInput").value.trim();
+            if (!token) { alert("Please paste your token!"); return; }
             localStorage.setItem("fabyou_github_token", token);
             showAdminPanel();
         }
-
         function logoutToken() {
             if (confirm("Remove token from this browser?")) {
                 localStorage.removeItem("fabyou_github_token");
@@ -205,17 +243,13 @@
         function checkPassword() {
             const pass = document.getElementById("password").value;
             if (pass === PASSWORD) {
-                if (getToken()) {
-                    showAdminPanel();
-                } else {
+                if (getToken()) showAdminPanel();
+                else {
                     document.getElementById("login-screen").style.display = "none";
                     document.getElementById("token-screen").style.display = "block";
                 }
-            } else {
-                alert("Wrong password!");
-            }
+            } else alert("Wrong password!");
         }
-
         function showAdminPanel() {
             document.getElementById("login-screen").style.display = "none";
             document.getElementById("token-screen").style.display = "none";
@@ -223,11 +257,10 @@
             loadProducts();
         }
 
-        // ================= STATUS MESSAGES =================
+        // ================= STATUS =================
         function showStatus(msg, type) {
             const box = document.getElementById("status-box");
-            if (!msg) { box.innerHTML = ""; return; }
-            box.innerHTML = `<div class="status ${type}">${msg}</div>`;
+            box.innerHTML = msg ? `<div class="status ${type}">${msg}</div>` : "";
         }
 
         // ================= GITHUB API =================
@@ -235,12 +268,9 @@
             const token = getToken();
             const url = `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${path}?ref=${CONFIG.branch}`;
             const res = await fetch(url, {
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Accept": "application/vnd.github+json"
-                }
+                headers: { "Authorization": `Bearer ${token}`, "Accept": "application/vnd.github+json" }
             });
-            if (res.status === 404) return null; // ملف غير موجود
+            if (res.status === 404) return null;
             if (!res.ok) throw new Error(`GitHub GET error: ${res.status}`);
             return await res.json();
         }
@@ -252,11 +282,7 @@
             if (sha) body.sha = sha;
             const res = await fetch(url, {
                 method: "PUT",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Accept": "application/vnd.github+json",
-                    "Content-Type": "application/json"
-                },
+                headers: { "Authorization": `Bearer ${token}`, "Accept": "application/vnd.github+json", "Content-Type": "application/json" },
                 body: JSON.stringify(body)
             });
             if (!res.ok) {
@@ -271,18 +297,13 @@
             const url = `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${path}`;
             const res = await fetch(url, {
                 method: "DELETE",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Accept": "application/vnd.github+json",
-                    "Content-Type": "application/json"
-                },
+                headers: { "Authorization": `Bearer ${token}`, "Accept": "application/vnd.github+json", "Content-Type": "application/json" },
                 body: JSON.stringify({ message, sha, branch: CONFIG.branch })
             });
             if (!res.ok) throw new Error(`GitHub DELETE error: ${res.status}`);
         }
 
         // ================= HELPERS =================
-        // تحويل ملف لـ base64 (بلا prefix)
         function fileToBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -291,17 +312,10 @@
                 reader.readAsDataURL(file);
             });
         }
+        function strToBase64(str) { return btoa(unescape(encodeURIComponent(str))); }
+        function base64ToStr(b64) { return decodeURIComponent(escape(atob(b64))); }
 
-        // تحويل string لـ base64 (مع دعم Unicode / العربية)
-        function strToBase64(str) {
-            return btoa(unescape(encodeURIComponent(str)));
-        }
-
-        function base64ToStr(b64) {
-            return decodeURIComponent(escape(atob(b64)));
-        }
-
-        // قراءة المنتجات + sha ديال products.json
+        // قراءة المنتجات + sha
         async function readProducts() {
             const data = await githubGet(CONFIG.productsFile);
             if (!data) return { products: [], sha: null };
@@ -309,137 +323,141 @@
             return { products: JSON.parse(content), sha: data.sha };
         }
 
-        // كتابة المنتجات لـ products.json
-        async function writeProducts(products, sha) {
-            const content = strToBase64(JSON.stringify(products, null, 2));
-            return await githubPut(CONFIG.productsFile, content, "Update products", sha);
+        // 🔁 كتابة مع إعادة المحاولة على sha conflict (409)
+        async function writeProductsWithRetry(products) {
+            for (let attempt = 1; attempt <= 4; attempt++) {
+                const { sha } = await readProducts();
+                try {
+                    const content = strToBase64(JSON.stringify(products, null, 2));
+                    return await githubPut(CONFIG.productsFile, content, `Update products (attempt ${attempt})`, sha);
+                } catch (e) {
+                    const isConflict = e.message.includes("409") || e.message.includes("conflict");
+                    if (!isConflict || attempt === 4) throw e;
+                    showOverlay(`تزامن... محاولة ${attempt + 1}/4`);
+                    await new Promise(r => setTimeout(r, 1200));
+                }
+            }
         }
 
-        // ================= PRODUCT OPERATIONS =================
+        // ================= ADD =================
         async function addProduct() {
             const name = document.getElementById("productName").value.trim();
             const price = document.getElementById("productPrice").value;
             const fileInput = document.getElementById("productImage");
-            const addBtn = document.getElementById("addBtn");
 
-            if (!name) { alert("Please fill the product name!"); return; }
-            if (!price || parseInt(price) <= 0) { alert("Please enter a valid price!"); return; }
+            if (!name) { alert("المرجو إدخال اسم المنتج!"); return; }
+            if (!price || parseInt(price) <= 0) { alert("المرجو إدخال ثمن صحيح!"); return; }
 
-            addBtn.disabled = true;
-            addBtn.innerHTML = '<span class="spinner"></span> Uploading...';
-            showStatus('<span class="spinner"></span> Adding product to GitHub...', "loading");
+            await withLock("جاري إضافة المنتج...", async () => {
+                try {
+                    let imagePath = "";
 
-            try {
-                let imagePath = "";
+                    // 1) رفع الصورة باسم فريد (timestamp + رقم عشوائي)
+                    if (fileInput.files.length > 0) {
+                        const file = fileInput.files[0];
+                        showStatus('<span class="spinner"></span> رفع الصورة...', "loading");
+                        const base64 = await fileToBase64(file);
+                        const ext = (file.name.split(".").pop() || "jpg").toLowerCase().substring(0, 4);
+                        const fileName = `product_${Date.now()}_${Math.floor(Math.random()*1000)}.${ext}`;
+                        imagePath = `${CONFIG.imagesFolder}/${fileName}`;
+                        await githubPut(imagePath, base64, `Add image: ${fileName}`);
+                    }
 
-                // 1. رفع الصورة (إيلا كاينة)
-                if (fileInput.files.length > 0) {
-                    const file = fileInput.files[0];
-                    const base64 = await fileToBase64(file);
-                    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().substring(0, 4);
-                    const fileName = `product_${Date.now()}.${ext}`;
-                    imagePath = `${CONFIG.imagesFolder}/${fileName}`;
-                    showStatus('<span class="spinner"></span> Uploading image...', "loading");
-                    await githubPut(imagePath, base64, `Add image: ${fileName}`);
+                    // 2) قراءة المنتجات الحالية
+                    showStatus('<span class="spinner"></span> تحديث قائمة المنتجات...', "loading");
+                    const { products } = await readProducts();
+
+                    // 3) زيادة المنتج
+                    products.push({ name, price: parseInt(price), image: imagePath });
+
+                    // 4) كتابة مع إعادة المحاولة
+                    await writeProductsWithRetry(products);
+
+                    // 5) تنظيف
+                    document.getElementById("productName").value = "";
+                    document.getElementById("productPrice").value = "";
+                    fileInput.value = "";
+
+                    showStatus("✅ تمت إضافة المنتج! سيظهر في الموقع خلال ~1 دقيقة.", "success");
+                    await loadProducts();
+                } catch (error) {
+                    console.error(error);
+                    showStatus("❌ خطأ: " + error.message, "error");
                 }
-
-                // 2. قراءة المنتجات الحالية + sha
-                showStatus('<span class="spinner"></span> Updating product list...', "loading");
-                const { products, sha } = await readProducts();
-
-                // 3. زيادة المنتج الجديد
-                products.push({
-                    name: name,
-                    price: parseInt(price),
-                    image: imagePath
-                });
-
-                // 4. كتابة products.json
-                await writeProducts(products, sha);
-
-                // 5. تنظيف + إعادة تحميل
-                document.getElementById("productName").value = "";
-                document.getElementById("productPrice").value = "";
-                fileInput.value = "";
-
-                showStatus("✅ Product added successfully! It will appear on the site in ~1 min.", "success");
-                loadProducts();
-            } catch (error) {
-                console.error(error);
-                showStatus("❌ Error: " + error.message, "error");
-            } finally {
-                addBtn.disabled = false;
-                addBtn.innerHTML = "⬆️ Add Product to GitHub";
-            }
+            });
         }
 
+        // ================= DELETE ONE =================
         async function deleteProduct(index) {
-            if (!confirm("Delete this product?")) return;
-            showStatus('<span class="spinner"></span> Deleting...', "loading");
+            if (!confirm("هل تريد حذف هذا المنتج؟")) return;
 
-            try {
-                const { products, sha } = await readProducts();
-                const product = products[index];
+            await withLock("جاري حذف المنتج...", async () => {
+                try {
+                    const { products } = await readProducts();
+                    const product = products[index];
+                    if (!product) { showStatus("❌ المنتج غير موجود.", "error"); return; }
 
-                // مسح الصورة من GitHub (إيلا كاينة)
-                if (product.image && product.image.startsWith(CONFIG.imagesFolder + "/")) {
-                    try {
-                        const imgData = await githubGet(product.image);
-                        if (imgData) await githubDelete(product.image, imgData.sha, `Delete image`);
-                    } catch (e) { console.warn("Image delete skipped:", e.message); }
-                }
-
-                // تحديث products.json
-                products.splice(index, 1);
-                await writeProducts(products, sha);
-
-                showStatus("✅ Product deleted!", "success");
-                loadProducts();
-            } catch (error) {
-                console.error(error);
-                showStatus("❌ Error: " + error.message, "error");
-            }
-        }
-
-        async function clearAllProducts() {
-            if (!confirm("Delete ALL products? This cannot be undone!")) return;
-            showStatus('<span class="spinner"></span> Deleting all products...', "loading");
-
-            try {
-                const { products, sha } = await readProducts();
-
-                // مسح كاع الصور
-                for (const product of products) {
+                    // مسح الصورة (تجاهل الأخطاء)
                     if (product.image && product.image.startsWith(CONFIG.imagesFolder + "/")) {
                         try {
                             const imgData = await githubGet(product.image);
-                            if (imgData) await githubDelete(product.image, imgData.sha, `Delete image`);
-                        } catch (e) { /* تجاهل */ }
+                            if (imgData) await githubDelete(product.image, imgData.sha, "Delete image");
+                        } catch (e) { console.warn("تم تجاهل حذف الصورة:", e.message); }
                     }
+
+                    // تحديث القائمة
+                    products.splice(index, 1);
+                    await writeProductsWithRetry(products);
+
+                    showStatus("✅ تم حذف المنتج!", "success");
+                    await loadProducts();
+                } catch (error) {
+                    console.error(error);
+                    showStatus("❌ خطأ: " + error.message, "error");
                 }
-
-                // فراغ products.json
-                await writeProducts([], sha);
-
-                showStatus("✅ All products deleted!", "success");
-                loadProducts();
-            } catch (error) {
-                console.error(error);
-                showStatus("❌ Error: " + error.message, "error");
-            }
+            });
         }
 
+        // ================= CLEAR ALL =================
+        async function clearAllProducts() {
+            if (!confirm("تحذير! سيتم حذف جميع المنتجات نهائياً. متابعة؟")) return;
+
+            await withLock("جاري حذف جميع المنتجات...", async () => {
+                try {
+                    const { products } = await readProducts();
+
+                    // مسح كاع الصور
+                    for (const product of products) {
+                        if (product.image && product.image.startsWith(CONFIG.imagesFolder + "/")) {
+                            try {
+                                const imgData = await githubGet(product.image);
+                                if (imgData) await githubDelete(product.image, imgData.sha, "Delete image");
+                            } catch (e) { /* تجاهل */ }
+                        }
+                    }
+
+                    await writeProductsWithRetry([]);
+                    showStatus("✅ تم حذف جميع المنتجات!", "success");
+                    await loadProducts();
+                } catch (error) {
+                    console.error(error);
+                    showStatus("❌ خطأ: " + error.message, "error");
+                }
+            });
+        }
+
+        // ================= LOAD =================
         async function loadProducts() {
             const container = document.getElementById("productList");
             const countEl = document.getElementById("product-count");
-            container.innerHTML = '<p class="small"><span class="spinner"></span> Loading products...</p>';
+            container.innerHTML = '<p class="small"><span class="spinner"></span> تحميل المنتجات...</p>';
 
             try {
                 const { products } = await readProducts();
                 countEl.textContent = `(${products.length})`;
 
                 if (products.length === 0) {
-                    container.innerHTML = "<p class='small'>No products yet. Add your first product above! 👆</p>";
+                    container.innerHTML = "<p class='small'>لا توجد منتجات بعد. أضف أول منتج بالأعلى! 👆</p>";
                     return;
                 }
 
@@ -447,19 +465,19 @@
                     <div class="product-item">
                         <div style="display: flex; align-items: center; gap: 15px;">
                             ${product.image 
-                                ? `<img src="${product.image}" class="product-thumb" onerror="this.style.display='none'">` 
+                                ? `<img src="${product.image}" class="product-thumb" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22><rect width=%2260%22 height=%2260%22 fill=%22%23eee%22/><text x=%2250%25%22 y=%2250%25%22 font-size=%2210%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22>?</text></svg>'">` 
                                 : `<div style="width:60px;height:60px;background:#eee;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;">no img</div>`}
                             <div>
                                 <strong>${product.name}</strong><br>
                                 <span class="small">${product.price} DH</span>
                             </div>
                         </div>
-                        <button class="delete-btn" onclick="deleteProduct(${index})">Delete</button>
+                        <button class="delete-btn" onclick="deleteProduct(${index})">حذف</button>
                     </div>
                 `).join("");
             } catch (error) {
                 console.error(error);
-                container.innerHTML = `<p style="color:#e63946;">❌ Could not load products: ${error.message}<br><span class="small">Check your token is valid.</span></p>`;
+                container.innerHTML = `<p style="color:#e63946;">❌ تعذر تحميل المنتجات: ${error.message}<br><span class="small">تحقق من صحة الـ token.</span></p>`;
             }
         }
     </script>
