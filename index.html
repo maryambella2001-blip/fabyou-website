@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <title>fabyou</title>
+    <style>
+        .product-image {
+            padding: 10px;
+        }
+        .product-image img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid #eee;
+        }
+        .color-options {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 8px 0;
+        }
+        .color-circle {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #ddd;
+            transition: 0.2s;
+        }
+        .color-circle:hover {
+            transform: scale(1.2);
+            border-color: #000;
+        }
+        .color-circle.selected {
+            border-color: #000;
+            box-shadow: 0 0 0 3px #ccc;
+        }
+        .no-products {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        /* Header Hamburger */
+        .header-hamburger {
+            display: none;
+            font-size: 22px;
+            cursor: pointer;
+            margin-left: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .header-hamburger {
+                display: block;
+            }
+            
+            header ul {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                background: white;
+                padding: 15px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                z-index: 999;
+            }
+            
+            header ul.show {
+                display: flex;
+            }
+            
+            header ul li a {
+                padding: 8px 15px;
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body> 
+    <header>
+        <img src="fabyou.jpg" class="logo" alt="fabyou">
+        
+        <ul id="nav-menu">
+            <li><a href="#sirves">Collection</a></li>
+            <li><a href="#aboutme">About</a></li>
+            <li><a href="#contacme">Contact</a></li>
+        </ul>
+        
+        <a href="card.html" class="cart-btn">
+            🛒 Cart (<span id="cart-count">0</span>)
+        </a>
+
+        <!-- Hamburger Menu -->
+        <div class="header-hamburger" onclick="toggleHeaderMenu()">
+            <i class="fas fa-bars"></i>
+        </div>
+    </header>
+    
+    <hr>
+
+    <section class="about" id="sirves">
+        <div class="hesob">
+            <h5>summer collection</h5>
+            <h1>New Summer <br> collection 2026</h1>
+            <p>Light, fresh, and trendy</p>
+            <a href="#main-bnt" class="main-bnt">shop now <i class="fas fa-shopping-cart"></i></a>
+        </div>
+        <img src="fabyou.jpg" alt="design" class="heroimg">
+    </section>
+    
+    <hr>
+
+    <section class="products" id="main-bnt">
+        <!-- المنتجات كتجي من لوحة التحكم -->
+    </section>
+    
+    <hr>
+
+    <section class="ismme" id="aboutme">
+        <h2>About Me</h2>
+        <p>Le commerce électronique consiste à acheter et vendre des produits...</p>
+    </section>
+    
+    <hr>
+
+    <section id="contacme" class="contact">
+        <div class="contactTitle">
+            <h1>contact</h1>
+            <h1>me</h1>
+        </div>
+        <div class="contactme">
+            <div class="emaliAndphon">
+                <img src="Email.svg" alt="Email">
+                <a href="mailto:contact@fabyou.com"><h3>contact@fabyou.com</h3></a>
+            </div>
+            <div class="emaliAndphon">
+                <img src="phone.svg" alt="Phone">
+                <a href="tel:+212773300654"><h3>+212773300654</h3></a>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        let cart = JSON.parse(localStorage.getItem("cart")) || [];
+        updateCount();
+
+        // ✅ FIX: حذفنا selectedColor اللي كانت عاملة مشكل (كانت مشتركة بين كاع المنتجات)
+        // دابا كل منتج عندو اللون ديالو بوحدو
+
+        // ✅ FIX: منتجات افتراضية إيلا ما كاين直到ش حاجة فالـ admin
+        const DEFAULT_PRODUCTS = [
+            { name: "T-Shirt Black", price: 129, image: "" },
+            { name: "Hoodie Navy", price: 249, image: "" },
+            { name: "Cap White", price: 89, image: "" }
+        ];
+
+        const PLACEHOLDER_IMAGE = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='200' height='200' fill='%23eee'/><text x='50%25' y='50%25' font-size='20' text-anchor='middle' dy='.3em' fill='%23999'>fabyou</text></svg>";
+
+        function loadProducts() {
+            const container = document.getElementById("main-bnt");
+
+            // أولاً: نقرا المنتجات من الـ Admin (localStorage)
+            let products = JSON.parse(localStorage.getItem("adminProducts")) || [];
+
+            // ✅ FIX: إيلا ما كاين حتى منتج فالـ admin، نعرض المنتجات الافتراضية
+            if (products.length === 0) {
+                products = DEFAULT_PRODUCTS;
+            }
+
+            container.innerHTML = products.map((product) => `
+                <div class="card">
+                    <div class="product-image">
+                        <img src="${product.image || PLACEHOLDER_IMAGE}" alt="${product.name}">
+                    </div>
+                    <h3>${product.name}</h3>
+                    
+                    <div class="color-options">
+                        <div class="color-circle" style="background: #111;" data-color="Black" onclick="selectColor(this)"></div>
+                        <div class="color-circle" style="background: #444;" data-color="Dark Gray" onclick="selectColor(this)"></div>
+                        <div class="color-circle" style="background: #222;" data-color="Navy" onclick="selectColor(this)"></div>
+                    </div>
+                    
+                    <div class="price-cart">
+                        <span>${product.price} DH</span>
+                        <button onclick="addToCartWithOptions(this)">Add to Cart</button>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        // ✅ FIX: اللون دابا كيتختار فكل كارد بوحدو (ماكاينش تداخل بين المنتجات)
+        function selectColor(element) {
+            const card = element.closest('.card');
+            card.querySelectorAll('.color-circle').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function addToCartWithOptions(button) {
+            const card = button.closest('.card');
+            const name = card.querySelector('h3').innerText;
+            const priceText = card.querySelector('.price-cart span').innerText;
+            const price = parseInt(priceText);
+
+            // ✅ FIX: اقرأ اللون المختار من نفس الكارد ماشي من متغير عام
+            const selectedCircle = card.querySelector('.color-circle.selected');
+            const color = selectedCircle ? selectedCircle.getAttribute('data-color') : "Default";
+
+            cart.push({
+                name: name,
+                price: price,
+                color: color,
+                size: "M"
+            });
+
+            localStorage.setItem("cart", JSON.stringify(cart));
+            updateCount();
+            
+            // مسح الاختيار فهد الكارد فقط
+            card.querySelectorAll('.color-circle').forEach(el => el.classList.remove('selected'));
+        }
+
+        function updateCount() {
+            const countEl = document.getElementById("cart-count");
+            if (countEl) countEl.innerText = cart.length;
+        }
+
+        // Hamburger Menu
+        function toggleHeaderMenu() {
+            const menu = document.getElementById("nav-menu");
+            menu.classList.toggle("show");
+        }
+
+        window.onload = function() {
+            loadProducts();
+            updateCount();
+        }
+    </script>
+</body>
+</html>

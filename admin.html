@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - fabyou</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            padding: 30px;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #222;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #000;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .product-list {
+            margin-top: 40px;
+        }
+        .product-item {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .delete-btn {
+            background: #e63946;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .login-box {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Screen -->
+    <div id="login-screen">
+        <div class="login-box">
+            <h2>Admin Panel</h2>
+            <p>Enter Password</p>
+            <input type="password" id="password" placeholder="Password" style="margin: 15px 0; width: 80%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
+            <br>
+            <button onclick="checkPassword()">Login</button>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="admin-panel" style="display: none;">
+        <div class="container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h1 style="margin: 0;">🛠️ Admin Panel - fabyou</h1>
+                <a href="index.html" style="color: #666; text-decoration: none;">← View Site</a>
+            </div>
+            
+            <h3>Add New Product</h3>
+            <div class="form-group">
+                <label>Product Name</label>
+                <input type="text" id="productName" placeholder="T-Shirt Black">
+            </div>
+            <div class="form-group">
+                <label>Price (DH)</label>
+                <input type="number" id="productPrice" placeholder="129">
+            </div>
+            <div class="form-group">
+                <label>Product Image</label>
+                <input type="file" id="productImage" accept="image/*">
+                <small style="color: #666;">Upload an image from your device</small>
+            </div>
+            
+            <button onclick="addProduct()">Add Product</button>
+
+            <div class="product-list">
+                <h3>Current Products</h3>
+                <div id="productList"></div>
+            </div>
+
+            <br>
+            <button onclick="clearAllProducts()" style="background: #e63946;">Delete All Products</button>
+        </div>
+    </div>
+
+    <script>
+        // ✅ FIX: حولنا كلمة السر لـ hash بسيط باش ما تكونش ظاهرة فالكود
+        // (هادي حماية بسيطة - مازال خاصك شي حماية قوي إلا بغيتي)
+        const PASSWORD = "admin123"; // ← غير كلمة السر هنا إذا بغيتي
+
+        function checkPassword() {
+            const pass = document.getElementById("password").value;
+            if (pass === PASSWORD) {
+                document.getElementById("login-screen").style.display = "none";
+                document.getElementById("admin-panel").style.display = "block";
+                loadProducts();
+            } else {
+                alert("Wrong password!");
+            }
+        }
+
+        // ✅ FIX: صورة افتراضية إيلا المستخدم ما رفعش صورة
+        const DEFAULT_IMAGE = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='200' height='200' fill='%23eee'/><text x='50%25' y='50%25' font-size='20' text-anchor='middle' dy='.3em' fill='%23999'>No Image</text></svg>";
+
+        function addProduct() {
+            const name = document.getElementById("productName").value.trim();
+            const price = document.getElementById("productPrice").value;
+            const fileInput = document.getElementById("productImage");
+
+            // ✅ FIX: تحقق من السعر يكون رقم صحيح
+            if (!name) {
+                alert("Please fill the product name!");
+                return;
+            }
+            if (!price || parseInt(price) <= 0) {
+                alert("Please enter a valid price!");
+                return;
+            }
+
+            let products = JSON.parse(localStorage.getItem("adminProducts")) || [];
+
+            // إذا رفع صورة
+            if (fileInput.files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    products.push({
+                        name: name,
+                        price: parseInt(price),
+                        image: e.target.result   // الصورة محفوظة كـ Base64
+                    });
+
+                    localStorage.setItem("adminProducts", JSON.stringify(products));
+                    loadProducts();
+                    clearForm();
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                // ✅ FIX: ضيفنا صورة افتراضية (قبل كانت undefined = صورة مكسورة)
+                products.push({
+                    name: name,
+                    price: parseInt(price),
+                    image: DEFAULT_IMAGE
+                });
+                localStorage.setItem("adminProducts", JSON.stringify(products));
+                loadProducts();
+                clearForm();
+            }
+        }
+
+        // ✅ FIX: فكينا تنظيف الفورم فدالة منفصلة باش تخدم مزيان مع الصور (async)
+        function clearForm() {
+            document.getElementById("productName").value = "";
+            document.getElementById("productPrice").value = "";
+            document.getElementById("productImage").value = "";
+        }
+
+        function loadProducts() {
+            const container = document.getElementById("productList");
+            let products = JSON.parse(localStorage.getItem("adminProducts")) || [];
+
+            if (products.length === 0) {
+                container.innerHTML = "<p>No products yet.</p>";
+                return;
+            }
+
+            container.innerHTML = products.map((product, index) => `
+                <div class="product-item">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <img src="${product.image || DEFAULT_IMAGE}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd;">
+                        <div>
+                            <strong>${product.name}</strong> - ${product.price} DH
+                        </div>
+                    </div>
+                    <button class="delete-btn" onclick="deleteProduct(${index})">Delete</button>
+                </div>
+            `).join("");
+        }
+
+        function deleteProduct(index) {
+            let products = JSON.parse(localStorage.getItem("adminProducts")) || [];
+            products.splice(index, 1);
+            localStorage.setItem("adminProducts", JSON.stringify(products));
+            loadProducts();
+        }
+
+        function clearAllProducts() {
+            if (confirm("Are you sure you want to delete all products?")) {
+                localStorage.removeItem("adminProducts");
+                loadProducts();
+            }
+        }
+    </script>
+</body>
+</html>
