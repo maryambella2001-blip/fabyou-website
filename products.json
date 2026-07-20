@@ -1,1 +1,7 @@
-[{"name":"Product A","price":100,"image":""},{"name":"Product B","price":200,"image":""}]
+[
+  {
+    "name": "Product B",
+    "price": 200,
+    "image": ""
+  }
+]
