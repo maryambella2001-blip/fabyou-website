@@ -36,11 +36,11 @@
             font-size: 13px;
             transition: 0.2s;
         }
-        .size-btn:hover { border-color: #2563eb; }
+        .size-btn:hover { border-color: #1a1a1a; }
         .size-btn.selected {
-            background: #2563eb;
+            background: #1a1a1a;
             color: white;
-            border-color: #2563eb;
+            border-color: #1a1a1a;
         }
         .no-products, .loading { text-align: center; padding: 60px 20px; color: #666; }
         .header-hamburger { display: none; font-size: 22px; cursor: pointer; margin-left: 15px; }
@@ -85,9 +85,9 @@
 
     <!-- تبويبات الكاطيغوري -->
     <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; max-width:1400px; margin:20px auto; padding:0 20px;">
-        <button class="tab-btn tab-active" onclick="filterCategory('all', this)" style="background:#2563eb;color:white;border:none;padding:12px 28px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:15px;transition:0.2s;">🛍️ الكل</button>
-        <button class="tab-btn" onclick="filterCategory('clothes', this)" style="background:#e5e7eb;color:#374151;border:none;padding:12px 28px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:15px;transition:0.2s;">👕 الملابس</button>
-        <button class="tab-btn" onclick="filterCategory('slippers', this)" style="background:#e5e7eb;color:#374151;border:none;padding:12px 28px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:15px;transition:0.2s;">👟 السبدرييلات</button>
+        <button class="tab-btn tab-active" onclick="filterCategory('all', this)" style="background:#1a1a1a;color:white;border:none;padding:12px 28px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:15px;transition:0.2s;">🛍️ All</button>
+        <button class="tab-btn" onclick="filterCategory('clothes', this)" style="background:#e5e7eb;color:#374151;border:none;padding:12px 28px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:15px;transition:0.2s;">👕 Clothes</button>
+        <button class="tab-btn" onclick="filterCategory('slippers', this)" style="background:#e5e7eb;color:#374151;border:none;padding:12px 28px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:15px;transition:0.2s;">👟 Slippers</button>
     </div>
 
     <section class="products" id="main-bnt">
@@ -189,12 +189,12 @@
         // تصفية المنتجات حسب الكاطيغوري
         function filterCategory(cat, btn) {
             currentCategory = cat;
-            // تحديث شكل التبويبات (النشط أزرق، الباقي رمادي)
+            // تحديث شكل التبويبات (النشط أسود، الباقي رمادي)
             document.querySelectorAll(".tab-btn").forEach(b => {
                 b.style.background = "#e5e7eb";
                 b.style.color = "#374151";
             });
-            btn.style.background = "#2563eb";
+            btn.style.background = "#1a1a1a";
             btn.style.color = "white";
 
             renderProducts();
