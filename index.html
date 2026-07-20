@@ -11,30 +11,37 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
     <title>fabyou</title>
     <style>
-        .product-image { padding: 10px; }
+        .product-image { padding: 10px; background: #fafafa; }
         .product-image img {
             width: 100%;
-            height: 160px;
-            object-fit: cover;
+            height: 220px;
+            object-fit: contain;
             border-radius: 12px;
-            border: 1px solid #eee;
         }
-        .color-options {
+        .size-options {
             display: flex;
             justify-content: center;
             gap: 8px;
-            margin: 8px 0;
+            margin: 10px 0;
+            flex-wrap: wrap;
         }
-        .color-circle {
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            cursor: pointer;
+        .size-btn {
+            min-width: 38px;
+            padding: 6px 10px;
             border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
             transition: 0.2s;
         }
-        .color-circle:hover { transform: scale(1.2); border-color: #000; }
-        .color-circle.selected { border-color: #000; box-shadow: 0 0 0 3px #ccc; }
+        .size-btn:hover { border-color: #2563eb; }
+        .size-btn.selected {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
         .no-products, .loading { text-align: center; padding: 60px 20px; color: #666; }
         .header-hamburger { display: none; font-size: 22px; cursor: pointer; margin-left: 15px; }
         @media (max-width: 768px) {
@@ -207,28 +214,31 @@
                 return;
             }
 
-            container.innerHTML = products.map((p) => `
+            container.innerHTML = products.map((p) => {
+                const isSlipper = (p.category || "clothes") === "slippers";
+                // التيا: الملابس = S/M/L/XL، السبدرييلات = 40-44
+                const sizes = isSlipper ? ["40","41","42","43","44"] : ["S","M","L","XL"];
+                return `
                 <div class="card">
                     <div class="product-image">
                         <img src="${resolveImage(p.image)}" alt="${p.name}" onerror="this.src='${PLACEHOLDER}'">
                     </div>
                     <h3>${p.name}</h3>
-                    <div class="color-options">
-                        <div class="color-circle" style="background:#111;" data-color="Black" onclick="selectColor(this)"></div>
-                        <div class="color-circle" style="background:#444;" data-color="Gray" onclick="selectColor(this)"></div>
-                        <div class="color-circle" style="background:#222;" data-color="Navy" onclick="selectColor(this)"></div>
+                    <div class="size-options">
+                        ${sizes.map(s => `<button class="size-btn" onclick="selectSize(this)">${s}</button>`).join("")}
                     </div>
                     <div class="price-cart">
                         <span>${p.price} DH</span>
                         <button onclick="addToCart(this)">Add to Cart</button>
                     </div>
                 </div>
-            `).join("");
+                `;
+            }).join("");
         }
 
-        function selectColor(el) {
+        function selectSize(el) {
             const card = el.closest('.card');
-            card.querySelectorAll('.color-circle').forEach(c => c.classList.remove('selected'));
+            card.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected'));
             el.classList.add('selected');
         }
 
@@ -236,11 +246,12 @@
             const card = btn.closest('.card');
             const name = card.querySelector('h3').innerText;
             const price = parseInt(card.querySelector('.price-cart span').innerText);
-            const sel = card.querySelector('.color-circle.selected');
-            cart.push({ name, price, color: sel ? sel.dataset.color : "Default", size: "M" });
+            const sel = card.querySelector('.size-btn.selected');
+            const size = sel ? sel.innerText : "Default";
+            cart.push({ name, price, size, color: "Default" });
             localStorage.setItem("cart", JSON.stringify(cart));
             updateCount();
-            card.querySelectorAll('.color-circle').forEach(c => c.classList.remove('selected'));
+            card.querySelectorAll('.size-btn').forEach(c => c.classList.remove('selected'));
         }
 
         function updateCount() {
