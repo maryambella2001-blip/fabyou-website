@@ -4,11 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shopping Cart - fabyou</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
-            padding: 30px;
+            padding: 30px 20px;
             background: #f5f5f5;
+            margin: 0;
+        }
+        .cart-wrap {
+            max-width: 700px;
+            margin: 40px auto 0;
+        }
+        .cart-title {
+            text-align: center;
+            font-size: 32px;
+            margin-bottom: 30px;
         }
         .cart-item {
             background: white;
@@ -20,7 +32,7 @@
             align-items: center;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        button {
+        .del-btn {
             background: #e63946;
             color: white;
             border: none;
@@ -29,10 +41,16 @@
             cursor: pointer;
             font-weight: 600;
         }
-        .total {
+        .del-btn:hover { opacity: 0.85; }
+        .total-box {
             margin-top: 25px;
             font-size: 24px;
             font-weight: bold;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: right;
         }
         .checkout-box {
             background: white;
@@ -41,7 +59,11 @@
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        input {
+        .checkout-box h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        .checkout-box input {
             display: block;
             width: 100%;
             margin-bottom: 12px;
@@ -49,58 +71,142 @@
             border: 1px solid #ccc;
             border-radius: 8px;
             font-size: 15px;
+            box-sizing: border-box;
         }
-        .item-info {
-            line-height: 1.5;
+        .checkout-box input:focus {
+            border-color: #000;
+            outline: none;
+        }
+        .checkout-btn {
+            width: 100%;
+            background: #25D366;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .checkout-btn:hover:not(:disabled) {
+            background: #1da851;
+        }
+        .checkout-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .empty-cart {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .empty-cart a {
+            display: inline-block;
+            margin-top: 20px;
+            background: #000;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .item-info { line-height: 1.5; }
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .back-link a {
+            color: #666;
+            text-decoration: none;
+        }
+        .success-msg {
+            background: #d4edda;
+            color: #155724;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-    <h1>🛒 Shopping Cart</h1>
+    <div class="cart-wrap">
+        <h1 class="cart-title">🛒 Shopping Cart</h1>
 
-    <div id="cart"></div>
+        <div id="content">
+            <div id="cart"></div>
 
-    <div class="total">
-        Total: <span id="total">0</span> DH
-    </div>
+            <div class="total-box">
+                Total: <span id="total">0</span> DH
+            </div>
 
-    <div class="checkout-box">
-        <h3>Checkout</h3>
-        <input id="name" type="text" placeholder="Your Name">
-        <input id="phone" type="text" placeholder="Phone Number">
-        <input id="address" type="text" placeholder="Address">
-        <button onclick="sendOrder()">Confirm Order via WhatsApp</button>
+            <div class="checkout-box">
+                <h3>📋 Checkout</h3>
+                <input id="name" type="text" placeholder="الاسم الكامل (Full Name)">
+                <input id="phone" type="tel" placeholder="رقم الهاتف (Phone Number)">
+                <input id="address" type="text" placeholder="العنوان (Address)">
+                <input id="city" type="text" placeholder="المدينة (City)">
+                <button class="checkout-btn" id="orderBtn" onclick="sendOrder()">
+                    <i class="fab fa-whatsapp"></i> Confirm Order via WhatsApp
+                </button>
+            </div>
+
+            <div class="back-link">
+                <a href="index.html">← Continue Shopping</a>
+            </div>
+        </div>
     </div>
 
     <script>
         let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-        function renderCart() {
-            let total = 0;
-            const container = document.getElementById("cart");
+        const WHATSAPP_NUMBER = "212773300654"; // ← رقمك على واتساب
 
-            container.innerHTML = cart.map((item, index) => {
+        function renderCart() {
+            const cartDiv = document.getElementById("cart");
+            const totalEl = document.getElementById("total");
+            const orderBtn = document.getElementById("orderBtn");
+
+            // ✅ FIX: السلة فارغة
+            if (cart.length === 0) {
+                document.getElementById("content").innerHTML = `
+                    <div class="empty-cart">
+                        <h2>🛒 السلة فارغة</h2>
+                        <p>لم تقم بإضافة أي منتج بعد</p>
+                        <a href="index.html">← العودة للتسوق</a>
+                    </div>
+                `;
+                return;
+            }
+
+            let total = 0;
+            cartDiv.innerHTML = cart.map((item, index) => {
                 total += item.price;
 
                 let extra = "";
-                if (item.customName) extra += `<p><strong>Name:</strong> ${item.customName}</p>`;
                 if (item.color) extra += `<p><strong>Color:</strong> ${item.color}</p>`;
                 if (item.size) extra += `<p><strong>Size:</strong> ${item.size}</p>`;
 
                 return `
                     <div class="cart-item">
                         <div class="item-info">
-                            <h3>${item.name}</h3>
-                            <p><strong>${item.price} DH</strong></p>
+                            <h3 style="margin:0 0 5px;">${item.name}</h3>
+                            <p style="margin:0;"><strong>${item.price} DH</strong></p>
                             ${extra}
                         </div>
-                        <button onclick="removeItem(${index})">Delete</button>
+                        <button class="del-btn" onclick="removeItem(${index})">Delete</button>
                     </div>
                 `;
             }).join("");
 
-            document.getElementById("total").innerText = total;
+            totalEl.innerText = total;
         }
 
         function removeItem(index) {
@@ -110,41 +216,63 @@
         }
 
         function sendOrder() {
-            const name = document.getElementById("name").value;
-            const phone = document.getElementById("phone").value;
-            const address = document.getElementById("address").value;
+            const name = document.getElementById("name").value.trim();
+            const phone = document.getElementById("phone").value.trim();
+            const address = document.getElementById("address").value.trim();
+            const city = document.getElementById("city").value.trim();
+            const orderBtn = document.getElementById("orderBtn");
 
-            if (!name || !phone || !address) {
-                alert("Please fill in all fields!");
+            // ✅ FIX: التحقق من البيانات
+            if (!name) { alert("المرجو إدخال الاسم!"); document.getElementById("name").focus(); return; }
+            if (!phone) { alert("المرجو إدخال رقم الهاتف!"); document.getElementById("phone").focus(); return; }
+            if (!address) { alert("المرجو إدخال العنوان!"); document.getElementById("address").focus(); return; }
+
+            // ✅ FIX: السلة فارغة
+            if (cart.length === 0) {
+                alert("السلة فارغة! أضف منتجات أولاً.");
                 return;
             }
 
-            let message = `🛒 NEW ORDER\n\n`;
-            message += `Name: ${name}\n`;
-            message += `Phone: ${phone}\n`;
-            message += `Address: ${address}\n\n`;
-            message += `Products:\n`;
+            // بناء رسالة الطلب
+            let message = `🛒 *طلب جديد - fabyou*\n\n`;
+            message += `👤 *الاسم:* ${name}\n`;
+            message += `📱 *الهاتف:* ${phone}\n`;
+            message += `📍 *العنوان:* ${address}\n`;
+            if (city) message += `🏙️ *المدينة:* ${city}\n`;
+            message += `\n*📦 المنتجات:*\n`;
 
             let total = 0;
-
-            cart.forEach(item => {
-                message += `- ${item.name}`;
-                if (item.customName) message += ` | Name: ${item.customName}`;
-                if (item.color) message += ` | Color: ${item.color}`;
-                if (item.size) message += ` | Size: ${item.size}`;
-                message += ` (${item.price} DH)\n`;
+            cart.forEach((item, i) => {
+                message += `${i + 1}. ${item.name}`;
+                if (item.color) message += ` | ${item.color}`;
+                if (item.size) message += ` | ${item.size}`;
+                message += ` — *${item.price} DH*\n`;
                 total += item.price;
             });
 
-            message += `\nTotal: ${total} DH`;
+            message += `\n💰 *المجموع: ${total} DH*\n\nشكراً لطلبك! 🙏`;
 
-            const whatsappNumber = "212773300654";
-            const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-            window.open(url, "_blank");
+            // ✅ FIX: نستعملو location.href بدل window.open (ماكيبلوكيهاش المتصفح)
+            const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+            
+            // نحاولو window.open الأول، إيلا فشل نستعملو location.href
+            const newWin = window.open(url, "_blank");
+            if (!newWin || newWin.closed || typeof newWin.closed == "undefined") {
+                // Popup blocker نشط → نستعملو location.href
+                window.location.href = url;
+            }
+
+            // ✅ FIX: نمسحو السلة بعد الطلب
+            setTimeout(() => {
+                if (confirm("✅ تم فتح واتساب!\n\nهل تريد تفريغ السلة الآن؟")) {
+                    cart = [];
+                    localStorage.setItem("cart", JSON.stringify(cart));
+                    renderCart();
+                }
+            }, 1500);
         }
 
         renderCart();
     </script>
-
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1daedd458bb9271',t:'MTc4NDQ3NjcyMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
