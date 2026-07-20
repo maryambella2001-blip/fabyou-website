@@ -1,1 +1,8 @@
-[]
+[
+  {
+    "name": "ismail",
+    "price": 122,
+    "image": "images/product_1784562848999_524.jpg",
+    "category": "sandals"
+  }
+]
