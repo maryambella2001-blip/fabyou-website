@@ -8,5 +8,10 @@
     "name": "tichort",
     "price": 155,
     "image": "images/product_1784554863649_154.jpeg"
+  },
+  {
+    "name": "ismail",
+    "price": 180,
+    "image": "images/product_1784554993090_488.jpeg"
   }
 ]
