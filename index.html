@@ -125,14 +125,29 @@
             return RAW_BASE + path + "?t=" + Date.now();
         }
 
+        // 🔁 محاولة قراءة المنتجات: raw الأولانية (تحديث سريع)، إلا فشلات نرجعو لـ Pages
+        async function fetchProductsRobust() {
+            // المحاولة 1: raw.githubusercontent (cache قليل = المنتجات الجديدة كتبان بزربة)
+            try {
+                const r1 = await fetch(RAW_BASE + "products.json?t=" + Date.now());
+                if (r1.ok) return await r1.json();
+            } catch (e) { console.warn("raw fetch فشل، نجرّبو Pages:", e.message); }
+
+            // المحاولة 2: نفس الأصل (GitHub Pages) — fallback
+            try {
+                const r2 = await fetch("products.json?t=" + Date.now());
+                if (r2.ok) return await r2.json();
+            } catch (e) { console.warn("Pages fetch فشل تا هو:", e.message); }
+
+            // كاع جوج فشلو
+            throw new Error("تعذر تحميل المنتجات");
+        }
+
         async function loadProducts() {
             const container = document.getElementById("main-bnt");
 
             try {
-                // cache-bust باش نتجنبو الـ CDN cache
-                const response = await fetch(PRODUCTS_URL + "?t=" + Date.now());
-                if (!response.ok) throw new Error("HTTP " + response.status);
-                let products = await response.json();
+                let products = await fetchProductsRobust();
 
                 if (!products || products.length === 0) {
                     container.innerHTML = `
