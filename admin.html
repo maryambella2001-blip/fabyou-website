@@ -264,15 +264,36 @@
         }
 
         // ================= GITHUB API =================
+        // 🔁 githubGet مع retry على 5xx
         async function githubGet(path) {
             const token = getToken();
             const url = `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${path}?ref=${CONFIG.branch}`;
-            const res = await fetch(url, {
-                headers: { "Authorization": `Bearer ${token}`, "Accept": "application/vnd.github+json" }
-            });
-            if (res.status === 404) return null;
-            if (!res.ok) throw new Error(`GitHub GET error: ${res.status}`);
-            return await res.json();
+            for (let i = 1; i <= 4; i++) {
+                try {
+                    const res = await fetch(url, {
+                        headers: { "Authorization": `Bearer ${token}`, "Accept": "application/vnd.github+json" }
+                    });
+                    if (res.status === 404) return null;
+                    if (!res.ok) throw Object.assign(new Error(`HTTP ${res.status}`), { status: res.status });
+                    return await res.json();
+                } catch (e) {
+                    if (i === 4 || (e.status && e.status < 500 && e.status !== 0)) throw e;
+                    await new Promise(r => setTimeout(r, 1500 * i));
+                }
+            }
+        }
+
+        async function githubPutRaw(path, contentBase64, message, sha) {
+            // نسخة بـ retry للصور (ما كنحتاجوش sha يتعاود يقرا)
+            for (let i = 1; i <= 4; i++) {
+                try {
+                    return await githubPut(path, contentBase64, message, sha);
+                } catch (e) {
+                    if (i === 4 || (e.status && e.status < 500)) throw e;
+                    showOverlay(`رفع الصورة... إعادة ${i}/4`);
+                    await new Promise(r => setTimeout(r, 2000 * i));
+                }
+            }
         }
 
         async function githubPut(path, contentBase64, message, sha) {
@@ -287,7 +308,9 @@
             });
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
-                throw new Error(`GitHub PUT error: ${res.status} - ${err.message || ""}`);
+                const e = new Error(`GitHub PUT error: ${res.status} - ${err.message || ""}`);
+                e.status = res.status;
+                throw e;
             }
             return await res.json();
         }
@@ -300,7 +323,11 @@
                 headers: { "Authorization": `Bearer ${token}`, "Accept": "application/vnd.github+json", "Content-Type": "application/json" },
                 body: JSON.stringify({ message, sha, branch: CONFIG.branch })
             });
-            if (!res.ok) throw new Error(`GitHub DELETE error: ${res.status}`);
+            if (!res.ok) {
+                const e = new Error(`GitHub DELETE error: ${res.status}`);
+                e.status = res.status;
+                throw e;
+            }
         }
 
         // ================= HELPERS =================
@@ -324,19 +351,29 @@
         }
 
         // 🔁 كتابة مع إعادة المحاولة — نقرا المحتوى + sha فكل محاولة
-        // modifyFn كتاخد النسخة الحالية وترجع النسخة الجديدة (باش ما نخسروش تغييرات متزامنة)
+        // retry على 409 (conflict) و 5xx (503 server error)
         async function writeProducts(modifyFn) {
-            for (let attempt = 1; attempt <= 5; attempt++) {
+            for (let attempt = 1; attempt <= 6; attempt++) {
                 const { products, sha } = await readProducts();
-                const updated = modifyFn(products.map(p => ({ ...p }))); // clone عميق
+                const updated = modifyFn(products.map(p => ({ ...p })));
                 try {
                     const content = strToBase64(JSON.stringify(updated, null, 2));
-                    return await githubPut(CONFIG.productsFile, content, `Update products (attempt ${attempt})`, sha);
+                    const result = await githubPut(CONFIG.productsFile, content, `Update products (attempt ${attempt})`, sha);
+                    // ✅ VERIFY: نقراو من جديد باش نتأكدو بلي تكتب
+                    await new Promise(r => setTimeout(r, 800));
+                    const verify = await readProducts();
+                    if (JSON.stringify(verify.products) === JSON.stringify(updated)) {
+                        return result;
+                    }
+                    console.warn("Verification فشل، نعاودو...");
+                    throw new Error("verify mismatch");
                 } catch (e) {
-                    const isConflict = e.message.includes("409") || e.message.includes("conflict") || e.message.includes("422");
-                    if (!isConflict || attempt === 5) throw e;
-                    showOverlay(`تزامن... محاولة ${attempt + 1}/5`);
-                    await new Promise(r => setTimeout(r, 1500));
+                    const isRetryable = e.status >= 500 || e.status === 409 || e.status === 422 ||
+                                        e.message.includes("409") || e.message.includes("conflict") ||
+                                        e.message.includes("verify") || e.message.includes("Failed to fetch");
+                    if (!isRetryable || attempt === 6) throw e;
+                    showOverlay(`إعادة المحاولة... ${attempt + 1}/6`);
+                    await new Promise(r => setTimeout(r, 2000));
                 }
             }
         }
@@ -362,7 +399,7 @@
                         const ext = (file.name.split(".").pop() || "jpg").toLowerCase().substring(0, 4);
                         const fileName = `product_${Date.now()}_${Math.floor(Math.random()*1000)}.${ext}`;
                         imagePath = `${CONFIG.imagesFolder}/${fileName}`;
-                        await githubPut(imagePath, base64, `Add image: ${fileName}`);
+                        await githubPutRaw(imagePath, base64, `Add image: ${fileName}`);
                     }
 
                     // 2) نزيد المنتج للقائمة (مع إعادة المحاولة + قراءة المحتوى الحقيقي)
@@ -380,7 +417,7 @@
                     document.getElementById("productPrice").value = "";
                     fileInput.value = "";
 
-                    showStatus("✅ تمت إضافة المنتج! سيظهر في الموقع خلال ~1 دقيقة.", "success");
+                    showStatus("✅ تمت إضافة المنتج <strong>" + capturedName + "</strong>! سيظهر في الموقع خلال ~1 دقيقة.", "success");
                     await loadProducts();
                 } catch (error) {
                     console.error(error);
