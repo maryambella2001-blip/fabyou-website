@@ -391,7 +391,7 @@
                 try {
                     let imagePath = "";
 
-                    // 1) رفع الصورة باسم فريد (timestamp + رقم عشوائي)
+                    // 1) رفع الصورة باسم فريد (timestamp + رقم عشوائي) + تحقق منها
                     if (fileInput.files.length > 0) {
                         const file = fileInput.files[0];
                         showStatus('<span class="spinner"></span> رفع الصورة...', "loading");
@@ -399,7 +399,19 @@
                         const ext = (file.name.split(".").pop() || "jpg").toLowerCase().substring(0, 4);
                         const fileName = `product_${Date.now()}_${Math.floor(Math.random()*1000)}.${ext}`;
                         imagePath = `${CONFIG.imagesFolder}/${fileName}`;
-                        await githubPutRaw(imagePath, base64, `Add image: ${fileName}`);
+
+                        // نرفع + نتحققو (3 محاولات)
+                        let imageVerified = false;
+                        for (let imgTry = 1; imgTry <= 3; imgTry++) {
+                            await githubPutRaw(imagePath, base64, `Add image: ${fileName} (try ${imgTry})`);
+                            await new Promise(r => setTimeout(r, 1500)); // نستناو GitHub ينسخ
+                            const check = await githubGet(imagePath);
+                            if (check) { imageVerified = true; break; }
+                            showOverlay(`تحقق من الصورة... ${imgTry}/3`);
+                        }
+                        if (!imageVerified) {
+                            throw new Error("فشل رفع الصورة بعد 3 محاولات. عاود من بعد (GitHub مشغول).");
+                        }
                     }
 
                     // 2) نزيد المنتج للقائمة (مع إعادة المحاولة + قراءة المحتوى الحقيقي)
