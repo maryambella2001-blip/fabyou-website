@@ -113,15 +113,22 @@
         let cart = JSON.parse(localStorage.getItem("cart")) || [];
         updateCount();
 
-        // نقراو من raw.githubusercontent (cache قليل = المسح/الإضافة كيبانو بزربة)
+        // نقراو من GitHub Contents API (فريش - cache غير 60 ثانية)
+        // fallback لـ raw ولا Pages إلا فشل
+        const API_URL = "https://api.github.com/repos/maryambella2001-blip/fabyou-website/contents/products.json?ref=main&t=";
         const RAW_BASE = "https://raw.githubusercontent.com/maryambella2001-blip/fabyou-website/main/";
         const PLACEHOLDER = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='200' height='200' fill='%23eee'/><text x='50%25' y='50%25' font-size='20' text-anchor='middle' dy='.3em' fill='%23999'>fabyou</text></svg>";
 
-        // الصور: المسار النسبي → raw (باش المنتجات الجديدة كتبان فوراً)
+        // الصور: المسار النسبي → raw (الصور ماشي كتبدل بزاف، cache ماشي مشكل)
         function resolveImage(path) {
             if (!path) return PLACEHOLDER;
             if (path.startsWith("http") || path.startsWith("data:")) return path;
             return RAW_BASE + path + "?t=" + Date.now();
+        }
+
+        // فك base64 (مع دعم UTF-8/العربية)
+        function decodeBase64(b64) {
+            return decodeURIComponent(escape(atob(b64.replace(/\n/g, ""))));
         }
 
         async function loadProducts() {
@@ -130,17 +137,28 @@
             container.innerHTML = '<div class="loading">⏳ تحميل المنتجات...</div>';
             let products = null;
 
-            // المحاولة 1: raw.githubusercontent (cache قليل + no-store)
+            // المحاولة 1: Contents API (فريش، cache 60 ثانية فقط)
             try {
-                const r1 = await fetch(RAW_BASE + "products.json?t=" + Date.now(), { cache: "no-store" });
-                if (r1.ok) products = await r1.json();
-            } catch (e) { console.warn("raw فشل:", e.message); }
+                const r1 = await fetch(API_URL + Date.now() + Math.random(), { cache: "no-store" });
+                if (r1.ok) {
+                    const data = await r1.json();
+                    products = JSON.parse(decodeBase64(data.content));
+                }
+            } catch (e) { console.warn("API فشل:", e.message); }
 
-            // المحاولة 2: نفس الأصل (Pages) — fallback
+            // المحاولة 2: raw.githubusercontent (fallback)
             if (!products) {
                 try {
-                    const r2 = await fetch("products.json?t=" + Date.now(), { cache: "no-store" });
+                    const r2 = await fetch(RAW_BASE + "products.json?t=" + Date.now(), { cache: "no-store" });
                     if (r2.ok) products = await r2.json();
+                } catch (e) { console.warn("raw فشل:", e.message); }
+            }
+
+            // المحاولة 3: نفس الأصل Pages (fallback أخير)
+            if (!products) {
+                try {
+                    const r3 = await fetch("products.json?t=" + Date.now(), { cache: "no-store" });
+                    if (r3.ok) products = await r3.json();
                 } catch (e) { console.warn("Pages فشل:", e.message); }
             }
 
