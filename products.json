@@ -28,5 +28,10 @@
     "name": "tichort",
     "price": 122,
     "image": "images/product_1784550130927_130.jpeg"
+  },
+  {
+    "name": "TEST",
+    "price": 1,
+    "image": ""
   }
 ]
