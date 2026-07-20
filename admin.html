@@ -323,18 +323,20 @@
             return { products: JSON.parse(content), sha: data.sha };
         }
 
-        // 🔁 كتابة مع إعادة المحاولة على sha conflict (409)
-        async function writeProductsWithRetry(products) {
-            for (let attempt = 1; attempt <= 4; attempt++) {
-                const { sha } = await readProducts();
+        // 🔁 كتابة مع إعادة المحاولة — نقرا المحتوى + sha فكل محاولة
+        // modifyFn كتاخد النسخة الحالية وترجع النسخة الجديدة (باش ما نخسروش تغييرات متزامنة)
+        async function writeProducts(modifyFn) {
+            for (let attempt = 1; attempt <= 5; attempt++) {
+                const { products, sha } = await readProducts();
+                const updated = modifyFn(products.map(p => ({ ...p }))); // clone عميق
                 try {
-                    const content = strToBase64(JSON.stringify(products, null, 2));
+                    const content = strToBase64(JSON.stringify(updated, null, 2));
                     return await githubPut(CONFIG.productsFile, content, `Update products (attempt ${attempt})`, sha);
                 } catch (e) {
-                    const isConflict = e.message.includes("409") || e.message.includes("conflict");
-                    if (!isConflict || attempt === 4) throw e;
-                    showOverlay(`تزامن... محاولة ${attempt + 1}/4`);
-                    await new Promise(r => setTimeout(r, 1200));
+                    const isConflict = e.message.includes("409") || e.message.includes("conflict") || e.message.includes("422");
+                    if (!isConflict || attempt === 5) throw e;
+                    showOverlay(`تزامن... محاولة ${attempt + 1}/5`);
+                    await new Promise(r => setTimeout(r, 1500));
                 }
             }
         }
@@ -363,17 +365,17 @@
                         await githubPut(imagePath, base64, `Add image: ${fileName}`);
                     }
 
-                    // 2) قراءة المنتجات الحالية
+                    // 2) نزيد المنتج للقائمة (مع إعادة المحاولة + قراءة المحتوى الحقيقي)
                     showStatus('<span class="spinner"></span> تحديث قائمة المنتجات...', "loading");
-                    const { products } = await readProducts();
+                    const capturedName = name;
+                    const capturedPrice = parseInt(price);
+                    const capturedImage = imagePath;
+                    await writeProducts(list => {
+                        list.push({ name: capturedName, price: capturedPrice, image: capturedImage });
+                        return list;
+                    });
 
-                    // 3) زيادة المنتج
-                    products.push({ name, price: parseInt(price), image: imagePath });
-
-                    // 4) كتابة مع إعادة المحاولة
-                    await writeProductsWithRetry(products);
-
-                    // 5) تنظيف
+                    // 3) تنظيف
                     document.getElementById("productName").value = "";
                     document.getElementById("productPrice").value = "";
                     fileInput.value = "";
@@ -405,9 +407,14 @@
                         } catch (e) { console.warn("تم تجاهل حذف الصورة:", e.message); }
                     }
 
-                    // تحديث القائمة
-                    products.splice(index, 1);
-                    await writeProductsWithRetry(products);
+                    // تحديث القائمة (نميز على المنتج بالاسم + الصورة باش نكون متأكدين)
+                    const targetName = product.name;
+                    const targetImage = product.image;
+                    await writeProducts(list => {
+                        const i = list.findIndex(p => p.name === targetName && p.image === targetImage);
+                        if (i !== -1) list.splice(i, 1);
+                        return list;
+                    });
 
                     showStatus("✅ تم حذف المنتج!", "success");
                     await loadProducts();
@@ -436,7 +443,7 @@
                         }
                     }
 
-                    await writeProductsWithRetry([]);
+                    await writeProducts(() => []);
                     showStatus("✅ تم حذف جميع المنتجات!", "success");
                     await loadProducts();
                 } catch (error) {

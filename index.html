@@ -7,9 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
     <title>fabyou</title>
     <style>
-        .product-image {
-            padding: 10px;
-        }
+        .product-image { padding: 10px; }
         .product-image img {
             width: 100%;
             height: 160px;
@@ -31,80 +29,33 @@
             border: 2px solid #ddd;
             transition: 0.2s;
         }
-        .color-circle:hover {
-            transform: scale(1.2);
-            border-color: #000;
-        }
-        .color-circle.selected {
-            border-color: #000;
-            box-shadow: 0 0 0 3px #ccc;
-        }
-        .no-products {
-            text-align: center;
-            padding: 60px 20px;
-            color: #666;
-        }
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #999;
-        }
-
-        /* Header Hamburger */
-        .header-hamburger {
-            display: none;
-            font-size: 22px;
-            cursor: pointer;
-            margin-left: 15px;
-        }
-        
+        .color-circle:hover { transform: scale(1.2); border-color: #000; }
+        .color-circle.selected { border-color: #000; box-shadow: 0 0 0 3px #ccc; }
+        .no-products, .loading { text-align: center; padding: 60px 20px; color: #666; }
+        .header-hamburger { display: none; font-size: 22px; cursor: pointer; margin-left: 15px; }
         @media (max-width: 768px) {
-            .header-hamburger {
-                display: block;
-            }
-            
+            .header-hamburger { display: block; }
             header ul {
-                display: none;
-                flex-direction: column;
-                position: absolute;
-                top: 70px;
-                left: 0;
-                width: 100%;
-                background: white;
-                padding: 15px;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-                z-index: 999;
+                display: none; flex-direction: column;
+                position: absolute; top: 70px; left: 0; width: 100%;
+                background: white; padding: 15px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1); z-index: 999;
             }
-            
-            header ul.show {
-                display: flex;
-            }
-            
-            header ul li a {
-                padding: 8px 15px;
-                font-size: 15px;
-            }
+            header ul.show { display: flex; }
+            header ul li a { padding: 8px 15px; font-size: 15px; }
         }
     </style>
 </head>
 <body> 
     <header>
         <img src="fabyou.jpg" class="logo" alt="fabyou">
-        
         <ul id="nav-menu">
             <li><a href="#sirves">Collection</a></li>
             <li><a href="#aboutme">About</a></li>
             <li><a href="#contacme">Contact</a></li>
         </ul>
-        
-        <a href="card.html" class="cart-btn">
-            🛒 Cart (<span id="cart-count">0</span>)
-        </a>
-
-        <!-- Hamburger Menu -->
-        <div class="header-hamburger" onclick="toggleHeaderMenu()">
-            <i class="fas fa-bars"></i>
-        </div>
+        <a href="card.html" class="cart-btn">🛒 Cart (<span id="cart-count">0</span>)</a>
+        <div class="header-hamburger" onclick="toggleHeaderMenu()"><i class="fas fa-bars"></i></div>
     </header>
     
     <hr>
@@ -155,16 +106,32 @@
         let cart = JSON.parse(localStorage.getItem("cart")) || [];
         updateCount();
 
-        // 🔗 رابط products.json على GitHub (raw)
-        const PRODUCTS_URL = "products.json";
+        // ✅ FIX: نقراو من raw.githubusercontent (cache قليل = المنتجات كتبان فوراً)
+        // بدل GitHub Pages (cache 10 دقايق)
+        const CONFIG = {
+            owner: "maryambella2001-blip",
+            repo: "fabyou-website",
+            branch: "main"
+        };
+        const RAW_BASE = `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/${CONFIG.branch}/`;
+        const PRODUCTS_URL = RAW_BASE + "products.json";
+
         const PLACEHOLDER_IMAGE = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='200' height='200' fill='%23eee'/><text x='50%25' y='50%25' font-size='20' text-anchor='middle' dy='.3em' fill='%23999'>fabyou</text></svg>";
+
+        // تحويل مسار الصورة النسبي لرابط raw مطلق (مع cache-bust)
+        function resolveImage(path) {
+            if (!path) return PLACEHOLDER_IMAGE;
+            if (path.startsWith("http") || path.startsWith("data:")) return path;
+            return RAW_BASE + path + "?t=" + Date.now();
+        }
 
         async function loadProducts() {
             const container = document.getElementById("main-bnt");
 
             try {
-                // ✅ دابا كنقراو المنتجات من products.json (من GitHub)
-                const response = await fetch(PRODUCTS_URL + "?t=" + Date.now()); // cache busting
+                // cache-bust باش نتجنبو الـ CDN cache
+                const response = await fetch(PRODUCTS_URL + "?t=" + Date.now());
+                if (!response.ok) throw new Error("HTTP " + response.status);
                 let products = await response.json();
 
                 if (!products || products.length === 0) {
@@ -179,16 +146,14 @@
                 container.innerHTML = products.map((product) => `
                     <div class="card">
                         <div class="product-image">
-                            <img src="${product.image || PLACEHOLDER_IMAGE}" alt="${product.name}">
+                            <img src="${resolveImage(product.image)}" alt="${product.name}">
                         </div>
                         <h3>${product.name}</h3>
-                        
                         <div class="color-options">
                             <div class="color-circle" style="background: #111;" data-color="Black" onclick="selectColor(this)"></div>
                             <div class="color-circle" style="background: #444;" data-color="Dark Gray" onclick="selectColor(this)"></div>
                             <div class="color-circle" style="background: #222;" data-color="Navy" onclick="selectColor(this)"></div>
                         </div>
-                        
                         <div class="price-cart">
                             <span>${product.price} DH</span>
                             <button onclick="addToCartWithOptions(this)">Add to Cart</button>
@@ -196,12 +161,12 @@
                     </div>
                 `).join("");
             } catch (error) {
+                console.error("Error loading products:", error);
                 container.innerHTML = `
                     <div class="no-products" style="grid-column: 1 / -1;">
                         <h3>⚠️ Could not load products</h3>
-                        <p>Please refresh the page.</p>
+                        <p>Please refresh the page in a moment.</p>
                     </div>`;
-                console.error("Error loading products:", error);
             }
         }
 
@@ -214,22 +179,13 @@
         function addToCartWithOptions(button) {
             const card = button.closest('.card');
             const name = card.querySelector('h3').innerText;
-            const priceText = card.querySelector('.price-cart span').innerText;
-            const price = parseInt(priceText);
-
+            const price = parseInt(card.querySelector('.price-cart span').innerText);
             const selectedCircle = card.querySelector('.color-circle.selected');
             const color = selectedCircle ? selectedCircle.getAttribute('data-color') : "Default";
 
-            cart.push({
-                name: name,
-                price: price,
-                color: color,
-                size: "M"
-            });
-
+            cart.push({ name, price, color, size: "M" });
             localStorage.setItem("cart", JSON.stringify(cart));
             updateCount();
-            
             card.querySelectorAll('.color-circle').forEach(el => el.classList.remove('selected'));
         }
 
@@ -239,8 +195,7 @@
         }
 
         function toggleHeaderMenu() {
-            const menu = document.getElementById("nav-menu");
-            menu.classList.toggle("show");
+            document.getElementById("nav-menu").classList.toggle("show");
         }
 
         window.onload = function() {
