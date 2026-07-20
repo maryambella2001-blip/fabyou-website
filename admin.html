@@ -167,8 +167,10 @@
             <div class="form-group">
                 <label>Category (الكاطيغوري)</label>
                 <select id="productCategory">
-                    <option value="clothes">👕 الملابس (Clothes)</option>
-                    <option value="slippers">👟 السبدرييلات (Slippers)</option>
+                    <option value="clothes">👕 Clothes</option>
+                    <option value="slippers">👟 Slippers</option>
+                    <option value="sandals">🩴 Sandals</option>
+                    <option value="kaskit">👡 Kaskit</option>
                 </select>
             </div>
             <div class="form-group">
@@ -546,7 +548,7 @@
                                 : `<div style="width:60px;height:60px;background:#eee;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;">no img</div>`}
                             <div>
                                 <strong>${product.name}</strong>
-                                <span class="small" style="display:block;margin-top:3px;">${product.category === "slippers" ? "👟 سبدرييلات" : "👕 ملابس"}</span>
+                                <span class="small" style="display:block;margin-top:3px;">${({clothes:"👕 Clothes",slippers:"👟 Slippers",sandals:"🩴 Sandals",kaskit:"👡 Kaskit"})[product.category] || "👕 Clothes"}</span>
                                 <span class="small">${product.price} DH</span>
                             </div>
                         </div>

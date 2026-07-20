@@ -88,6 +88,8 @@
         <button class="tab-btn tab-active" onclick="filterCategory('all', this)" style="background:#1a1a1a;color:white;border:none;padding:12px 28px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:15px;transition:0.2s;">🛍️ All</button>
         <button class="tab-btn" onclick="filterCategory('clothes', this)" style="background:#e5e7eb;color:#374151;border:none;padding:12px 28px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:15px;transition:0.2s;">👕 Clothes</button>
         <button class="tab-btn" onclick="filterCategory('slippers', this)" style="background:#e5e7eb;color:#374151;border:none;padding:12px 28px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:15px;transition:0.2s;">👟 Slippers</button>
+        <button class="tab-btn" onclick="filterCategory('sandals', this)" style="background:#e5e7eb;color:#374151;border:none;padding:12px 28px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:15px;transition:0.2s;">🩴 Sandals</button>
+        <button class="tab-btn" onclick="filterCategory('kaskit', this)" style="background:#e5e7eb;color:#374151;border:none;padding:12px 28px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:15px;transition:0.2s;">👡 Kaskit</button>
     </div>
 
     <section class="products" id="main-bnt">
@@ -215,9 +217,10 @@
             }
 
             container.innerHTML = products.map((p) => {
-                const isSlipper = (p.category || "clothes") === "slippers";
-                // التيا: الملابس = S/M/L/XL، السبدرييلات = 40-44
-                const sizes = isSlipper ? ["40","41","42","43","44"] : ["S","M","L","XL"];
+                const cat = p.category || "clothes";
+                // التيا: الملابس = S/M/L/XL، الأحذية (سبدرييلات/صندل/كاسكيت) = 40-44
+                const isShoe = ["slippers", "sandals", "kaskit"].includes(cat);
+                const sizes = isShoe ? ["40","41","42","43","44"] : ["S","M","L","XL"];
                 return `
                 <div class="card">
                     <div class="product-image">
