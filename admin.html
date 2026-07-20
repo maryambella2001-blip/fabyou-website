@@ -390,46 +390,56 @@
             await withLock("جاري إضافة المنتج...", async () => {
                 try {
                     let imagePath = "";
+                    const capturedName = name;
+                    const capturedPrice = parseInt(price);
 
-                    // 1) رفع الصورة باسم فريد (timestamp + رقم عشوائي) + تحقق منها
+                    // 1) نحدد مسار الصورة (إيلا كاينة)
+                    const fileInput = document.getElementById("productImage");
                     if (fileInput.files.length > 0) {
                         const file = fileInput.files[0];
-                        showStatus('<span class="spinner"></span> رفع الصورة...', "loading");
-                        const base64 = await fileToBase64(file);
                         const ext = (file.name.split(".").pop() || "jpg").toLowerCase().substring(0, 4);
                         const fileName = `product_${Date.now()}_${Math.floor(Math.random()*1000)}.${ext}`;
                         imagePath = `${CONFIG.imagesFolder}/${fileName}`;
-
-                        // نرفع + نتحققو (3 محاولات)
-                        let imageVerified = false;
-                        for (let imgTry = 1; imgTry <= 3; imgTry++) {
-                            await githubPutRaw(imagePath, base64, `Add image: ${fileName} (try ${imgTry})`);
-                            await new Promise(r => setTimeout(r, 1500)); // نستناو GitHub ينسخ
-                            const check = await githubGet(imagePath);
-                            if (check) { imageVerified = true; break; }
-                            showOverlay(`تحقق من الصورة... ${imgTry}/3`);
-                        }
-                        if (!imageVerified) {
-                            throw new Error("فشل رفع الصورة بعد 3 محاولات. عاود من بعد (GitHub مشغول).");
-                        }
                     }
 
-                    // 2) نزيد المنتج للقائمة (مع إعادة المحاولة + قراءة المحتوى الحقيقي)
-                    showStatus('<span class="spinner"></span> تحديث قائمة المنتجات...', "loading");
-                    const capturedName = name;
-                    const capturedPrice = parseInt(price);
-                    const capturedImage = imagePath;
+                    // 2) ✅ نزيد المنتج الأول (مضمون دايماً — الأولوية القصوى)
+                    showStatus('<span class="spinner"></span> تسجيل المنتج...', "loading");
                     await writeProducts(list => {
-                        list.push({ name: capturedName, price: capturedPrice, image: capturedImage });
+                        list.push({ name: capturedName, price: capturedPrice, image: imagePath });
                         return list;
                     });
 
-                    // 3) تنظيف
+                    // 3) نرفع الصورة (best effort — إيلا فشلات المنتج باقي كيبان)
+                    if (imagePath) {
+                        try {
+                            showStatus('<span class="spinner"></span> رفع الصورة...', "loading");
+                            const file = document.getElementById("productImage").files[0];
+                            const base64 = await fileToBase64(file);
+
+                            let imageVerified = false;
+                            for (let imgTry = 1; imgTry <= 3; imgTry++) {
+                                await githubPutRaw(imagePath, base64, `Add image (try ${imgTry})`);
+                                await new Promise(r => setTimeout(r, 1500));
+                                if (await githubGet(imagePath)) { imageVerified = true; break; }
+                                showOverlay(`تحقق من الصورة... ${imgTry}/3`);
+                            }
+                            if (!imageVerified) {
+                                showStatus("⚠️ المنتج <strong>" + capturedName + "</strong> تزاد! ولكن الصورة ما ترفعاتش (GitHub مشغول). تقدر تعاود من بعد.", "loading");
+                            } else {
+                                showStatus("✅ تمت إضافة المنتج <strong>" + capturedName + "</strong> بالصورة! سيظهر في الموقع خلال ~1 دقيقة.", "success");
+                            }
+                        } catch (imgErr) {
+                            console.warn("Image upload failed:", imgErr);
+                            showStatus("⚠️ المنتج <strong>" + capturedName + "</strong> تزاد! ولكن الصورة فشلات. تقدر تعاود من بعد.", "loading");
+                        }
+                    } else {
+                        showStatus("✅ تمت إضافة المنتج <strong>" + capturedName + "</strong>! سيظهر في الموقع خلال ~1 دقيقة.", "success");
+                    }
+
+                    // 4) تنظيف + تحديث
                     document.getElementById("productName").value = "";
                     document.getElementById("productPrice").value = "";
-                    fileInput.value = "";
-
-                    showStatus("✅ تمت إضافة المنتج <strong>" + capturedName + "</strong>! سيظهر في الموقع خلال ~1 دقيقة.", "success");
+                    document.getElementById("productImage").value = "";
                     await loadProducts();
                 } catch (error) {
                     console.error(error);
