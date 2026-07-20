@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- منع المتصفح من تخباء الصفحة (cache) -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
     <title>fabyou</title>
@@ -73,7 +77,10 @@
     <hr>
 
     <section class="products" id="main-bnt">
-        <div class="loading">⏳ Loading products...</div>
+        <div style="text-align:center; grid-column:1/-1; padding:20px;">
+            <button onclick="loadProducts()" style="background:#333; color:white; border:none; padding:10px 25px; border-radius:25px; cursor:pointer; font-weight:bold;">🔄 تحديث المنتجات</button>
+        </div>
+        <div class="loading" id="products-area">⏳ Loading products...</div>
     </section>
     
     <hr>
@@ -118,10 +125,12 @@
         }
 
         async function loadProducts() {
-            const container = document.getElementById("main-bnt");
+            const container = document.getElementById("products-area");
+            if (!container) return;
+            container.innerHTML = '<div class="loading">⏳ تحميل المنتجات...</div>';
             let products = null;
 
-            // المحاولة 1: raw.githubusercontent (cache قليل)
+            // المحاولة 1: raw.githubusercontent (cache قليل + no-store)
             try {
                 const r1 = await fetch(RAW_BASE + "products.json?t=" + Date.now(), { cache: "no-store" });
                 if (r1.ok) products = await r1.json();
@@ -136,7 +145,7 @@
             }
 
             if (!products || products.length === 0) {
-                container.innerHTML = `<div class="no-products" style="grid-column:1/-1;"><h3>No products yet 🛍️</h3><p>أضف منتجات من لوحة التحكم</p></div>`;
+                container.innerHTML = `<div class="no-products"><h3>No products yet 🛍️</h3><p>أضف منتجات من لوحة التحكم</p></div>`;
                 return;
             }
 
