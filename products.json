@@ -4,5 +4,11 @@
     "price": 123,
     "image": "images/product_1784585342964_443.jpg",
     "category": "slippers"
+  },
+  {
+    "name": "rigl",
+    "price": 123,
+    "image": "images/product_1784585488843_578.jpeg",
+    "category": "slippers"
   }
 ]
