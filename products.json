@@ -1,8 +1,27 @@
 [
-  {"name":"T-Shirt Black","price":129,"image":"imgs1.jpeg"},
-  {"name":"Hoodie Navy","price":249,"image":"imgs2.jpeg"},
-  {"name":"T-Shirt White","price":119,"image":"imgs3.jpeg"},
-  {"name":"Sweatshirt Gray","price":199,"image":"imgs4.jpeg"},
-  {"name":"Polo Shirt","price":159,"image":"imgs5.jpeg"},
-  {"name":"Cap Premium","price":89,"image":"imgs6.jpeg"}
+  {
+    "name": "T-Shirt Black",
+    "price": 129,
+    "image": "imgs1.jpeg"
+  },
+  {
+    "name": "Hoodie Navy",
+    "price": 249,
+    "image": "imgs2.jpeg"
+  },
+  {
+    "name": "T-Shirt White",
+    "price": 119,
+    "image": "imgs3.jpeg"
+  },
+  {
+    "name": "Sweatshirt Gray",
+    "price": 199,
+    "image": "imgs4.jpeg"
+  },
+  {
+    "name": "Polo Shirt",
+    "price": 159,
+    "image": "imgs5.jpeg"
+  }
 ]
