@@ -13,5 +13,10 @@
     "name": "ismail",
     "price": 123,
     "image": "images/product_1784555415269_385.jpg"
+  },
+  {
+    "name": "Salm",
+    "price": 123,
+    "image": "images/product_1784556092380_781.jpeg"
   }
 ]
