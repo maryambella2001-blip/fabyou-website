@@ -165,6 +165,13 @@
                 <input type="number" id="productPrice" placeholder="129">
             </div>
             <div class="form-group">
+                <label>Category (الكاطيغوري)</label>
+                <select id="productCategory">
+                    <option value="clothes">👕 الملابس (Clothes)</option>
+                    <option value="slippers">👟 السبدرييلات (Slippers)</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label>Product Image</label>
                 <input type="file" id="productImage" accept="image/*">
                 <small class="small">Upload an image from your device</small>
@@ -395,6 +402,7 @@
                     let imagePath = "";
                     const capturedName = name;
                     const capturedPrice = parseInt(price);
+                    const capturedCategory = document.getElementById("productCategory").value;
 
                     // 1) نحدد مسار الصورة (إيلا كاينة)
                     const fileInput = document.getElementById("productImage");
@@ -408,7 +416,7 @@
                     // 2) ✅ نزيد المنتج الأول (مضمون دايماً — الأولوية القصوى)
                     showStatus('<span class="spinner"></span> تسجيل المنتج...', "loading");
                     await writeProducts(list => {
-                        list.push({ name: capturedName, price: capturedPrice, image: imagePath });
+                        list.push({ name: capturedName, price: capturedPrice, image: imagePath, category: capturedCategory });
                         return list;
                     });
 
@@ -537,7 +545,8 @@
                                 ? `<img src="${product.image}" class="product-thumb" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22><rect width=%2260%22 height=%2260%22 fill=%22%23eee%22/><text x=%2250%25%22 y=%2250%25%22 font-size=%2210%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22>?</text></svg>'">` 
                                 : `<div style="width:60px;height:60px;background:#eee;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;">no img</div>`}
                             <div>
-                                <strong>${product.name}</strong><br>
+                                <strong>${product.name}</strong>
+                                <span class="small" style="display:block;margin-top:3px;">${product.category === "slippers" ? "👟 سبدرييلات" : "👕 ملابس"}</span>
                                 <span class="small">${product.price} DH</span>
                             </div>
                         </div>

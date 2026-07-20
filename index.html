@@ -76,8 +76,15 @@
     
     <hr>
 
+    <!-- تبويبات الكاطيغوري -->
+    <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; max-width:1400px; margin:20px auto; padding:0 20px;">
+        <button class="tab-btn tab-active" onclick="filterCategory('all', this)" style="background:#000;color:white;border:none;padding:12px 28px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:15px;">🛍️ الكل</button>
+        <button class="tab-btn" onclick="filterCategory('clothes', this)" style="background:#eee;color:#333;border:none;padding:12px 28px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:15px;">👕 الملابس</button>
+        <button class="tab-btn" onclick="filterCategory('slippers', this)" style="background:#eee;color:#333;border:none;padding:12px 28px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:15px;">👟 السبدرييلات</button>
+    </div>
+
     <section class="products" id="main-bnt">
-        <!-- المنتجات كتجي هنا مباشرة (باش grid يخدم مزيان) -->
+        <!-- المنتجات كتجي هنا مباشرة -->
     </section>
     
     <hr>
@@ -109,6 +116,9 @@
     <script>
         let cart = JSON.parse(localStorage.getItem("cart")) || [];
         updateCount();
+
+        let allProducts = []; // كاع المنتجات (محفوظين)
+        let currentCategory = "all"; // الكاطيغوري المختار دابا
 
         // نقراو من GitHub Contents API (فريش - cache غير 60 ثانية)
         // fallback لـ raw ولا Pages إلا فشل
@@ -159,16 +169,45 @@
             }
 
             if (!products || products.length === 0) {
+                allProducts = [];
                 container.innerHTML = `<div class="no-products" style="grid-column:1/-1;"><h3>No products yet 🛍️</h3><p>أضف منتجات من لوحة التحكم</p></div>`;
                 return;
             }
 
-            // زر التحديث (كياخد صف كامل) + المنتجات (grid جنب بعضياتهم)
-            container.innerHTML = `
-                <div style="grid-column:1/-1; text-align:center; padding:10px 0;">
-                    <button onclick="loadProducts()" style="background:#333; color:white; border:none; padding:10px 25px; border-radius:25px; cursor:pointer; font-weight:bold;">🔄 تحديث المنتجات</button>
-                </div>
-            ` + products.map((p) => `
+            // نحفظو المنتجات ونعرضوهم (حسب الكاطيغوري المختار)
+            allProducts = products;
+            renderProducts();
+        }
+
+        // تصفية المنتجات حسب الكاطيغوري
+        function filterCategory(cat, btn) {
+            currentCategory = cat;
+            // تحديث شكل التبويبات
+            document.querySelectorAll(".tab-btn").forEach(b => {
+                b.style.background = "#eee";
+                b.style.color = "#333";
+            });
+            btn.style.background = "#000";
+            btn.style.color = "white";
+
+            renderProducts();
+        }
+
+        function renderProducts() {
+            const container = document.getElementById("main-bnt");
+            let products = allProducts;
+
+            // تصفية حسب الكاطيغوري
+            if (currentCategory !== "all") {
+                products = products.filter(p => (p.category || "clothes") === currentCategory);
+            }
+
+            if (!products || products.length === 0) {
+                container.innerHTML = `<div class="no-products" style="grid-column:1/-1;"><h3>No products in this category 🛍️</h3></div>`;
+                return;
+            }
+
+            container.innerHTML = products.map((p) => `
                 <div class="card">
                     <div class="product-image">
                         <img src="${resolveImage(p.image)}" alt="${p.name}" onerror="this.src='${PLACEHOLDER}'">
