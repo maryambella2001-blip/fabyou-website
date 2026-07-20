@@ -23,5 +23,10 @@
     "name": "Polo Shirt",
     "price": 159,
     "image": "imgs5.jpeg"
+  },
+  {
+    "name": "ismail",
+    "price": 66,
+    "image": "images/product_1784549310170_438.jpeg"
   }
 ]
