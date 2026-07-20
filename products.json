@@ -3,5 +3,10 @@
     "name": "ismail",
     "price": 123,
     "image": "images/product_1784551526106_379.jpeg"
+  },
+  {
+    "name": "tichirt",
+    "price": 123,
+    "image": "images/product_1784552319577_35.jpeg"
   }
 ]
