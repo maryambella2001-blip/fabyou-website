@@ -355,10 +355,32 @@ header ul li a.active {
     }
     
     .products {
-        padding: 0 20px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        padding: 0 12px;
+    }
+
+    .card h3 {
+        font-size: 15px;
+        margin: 10px 8px 4px;
     }
     
-    .product-images img {
-        height: 150px;
+    .price-cart span {
+        font-size: 16px;
+    }
+    
+    .price-cart button {
+        padding: 7px 12px;
+        font-size: 12px;
+    }
+    
+    .size-btn {
+        padding: 4px 8px;
+        font-size: 11px;
+        min-width: 28px;
+    }
+
+    .product-image img {
+        height: 140px !important;
     }
 }
