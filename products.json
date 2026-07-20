@@ -1,1 +1,8 @@
-[]
+[
+  {
+    "name": "ismail",
+    "price": 123,
+    "image": "images/product_1784585342964_443.jpg",
+    "category": "slippers"
+  }
+]
