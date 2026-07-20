@@ -218,18 +218,24 @@
 
             container.innerHTML = products.map((p) => {
                 const cat = p.category || "clothes";
-                // التيا: الملابس = S/M/L/XL، الأحذية (سبدرييلات/صندل/كاسكيت) = 40-44
-                const isShoe = ["slippers", "sandals", "kaskit"].includes(cat);
-                const sizes = isShoe ? ["40","41","42","43","44"] : ["S","M","L","XL"];
+                // التيا حسب الكاطيغوري:
+                // الملابس = S/M/L/XL | السبدرييلات = 40-44 | الصندل = 40-43 | الكاسكيت = بلا تيا
+                let sizes = [];
+                if (cat === "clothes") sizes = ["S","M","L","XL"];
+                else if (cat === "slippers") sizes = ["40","41","42","43","44"];
+                else if (cat === "sandals") sizes = ["40","41","42","43"];
+                else if (cat === "kaskit") sizes = []; // كاسكيت بلا تيا
+                const sizeHTML = sizes.length > 0 ? `
+                    <div class="size-options">
+                        ${sizes.map(s => `<button class="size-btn" onclick="selectSize(this)">${s}</button>`).join("")}
+                    </div>` : "";
                 return `
                 <div class="card">
                     <div class="product-image">
                         <img src="${resolveImage(p.image)}" alt="${p.name}" onerror="this.src='${PLACEHOLDER}'">
                     </div>
                     <h3>${p.name}</h3>
-                    <div class="size-options">
-                        ${sizes.map(s => `<button class="size-btn" onclick="selectSize(this)">${s}</button>`).join("")}
-                    </div>
+                    ${sizeHTML}
                     <div class="price-cart">
                         <span>${p.price} DH</span>
                         <button onclick="addToCart(this)">Add to Cart</button>
