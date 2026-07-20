@@ -23,5 +23,10 @@
     "name": "ismail",
     "price": 66,
     "image": "images/product_1784549310170_438.jpeg"
+  },
+  {
+    "name": "tichort",
+    "price": 122,
+    "image": "images/product_1784550130927_130.jpeg"
   }
 ]
