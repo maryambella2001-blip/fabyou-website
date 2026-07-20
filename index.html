@@ -78,9 +78,9 @@
 
     <!-- تبويبات الكاطيغوري -->
     <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; max-width:1400px; margin:20px auto; padding:0 20px;">
-        <button class="tab-btn tab-active" onclick="filterCategory('all', this)" style="background:#000;color:white;border:none;padding:12px 28px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:15px;">🛍️ الكل</button>
-        <button class="tab-btn" onclick="filterCategory('clothes', this)" style="background:#eee;color:#333;border:none;padding:12px 28px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:15px;">👕 الملابس</button>
-        <button class="tab-btn" onclick="filterCategory('slippers', this)" style="background:#eee;color:#333;border:none;padding:12px 28px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:15px;">👟 السبدرييلات</button>
+        <button class="tab-btn tab-active" onclick="filterCategory('all', this)" style="background:#2563eb;color:white;border:none;padding:12px 28px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:15px;transition:0.2s;">🛍️ الكل</button>
+        <button class="tab-btn" onclick="filterCategory('clothes', this)" style="background:#e5e7eb;color:#374151;border:none;padding:12px 28px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:15px;transition:0.2s;">👕 الملابس</button>
+        <button class="tab-btn" onclick="filterCategory('slippers', this)" style="background:#e5e7eb;color:#374151;border:none;padding:12px 28px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:15px;transition:0.2s;">👟 السبدرييلات</button>
     </div>
 
     <section class="products" id="main-bnt">
@@ -182,12 +182,12 @@
         // تصفية المنتجات حسب الكاطيغوري
         function filterCategory(cat, btn) {
             currentCategory = cat;
-            // تحديث شكل التبويبات
+            // تحديث شكل التبويبات (النشط أزرق، الباقي رمادي)
             document.querySelectorAll(".tab-btn").forEach(b => {
-                b.style.background = "#eee";
-                b.style.color = "#333";
+                b.style.background = "#e5e7eb";
+                b.style.color = "#374151";
             });
-            btn.style.background = "#000";
+            btn.style.background = "#2563eb";
             btn.style.color = "white";
 
             renderProducts();
