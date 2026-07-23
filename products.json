@@ -16,5 +16,11 @@
     "price": 199,
     "image": "images/product_1784849933479_914.jpeg",
     "category": "sandals"
+  },
+  {
+    "name": "Sendale lacoste noir",
+    "price": 129,
+    "image": "images/product_1784850085205_778.jpeg",
+    "category": "sandals"
   }
 ]
