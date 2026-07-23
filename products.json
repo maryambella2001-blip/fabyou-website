@@ -28,5 +28,11 @@
     "price": 199,
     "image": "images/product_1784850137716_31.jpeg",
     "category": "sandals"
+  },
+  {
+    "name": "Sendale nike blanc",
+    "price": 199,
+    "image": "images/product_1784850210864_352.jpeg",
+    "category": "sandals"
   }
 ]
