@@ -34,5 +34,11 @@
     "price": 199,
     "image": "images/product_1784850210864_352.jpeg",
     "category": "sandals"
+  },
+  {
+    "name": "Sendale nike noir complet",
+    "price": 199,
+    "image": "images/product_1784850280652_674.jpeg",
+    "category": "sandals"
   }
 ]
