@@ -10,5 +10,11 @@
     "price": 129,
     "image": "images/product_1784849797896_208.jpeg",
     "category": "clothes"
+  },
+  {
+    "name": "Sendale nike  noir",
+    "price": 199,
+    "image": "images/product_1784849933479_914.jpeg",
+    "category": "sandals"
   }
 ]
