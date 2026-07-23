@@ -4,5 +4,11 @@
     "price": 129,
     "image": "images/product_1784849731810_278.jpeg",
     "category": "kaskit"
+  },
+  {
+    "name": "Les chort nike",
+    "price": 129,
+    "image": "images/product_1784849797896_208.jpeg",
+    "category": "clothes"
   }
 ]
