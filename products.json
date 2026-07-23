@@ -46,5 +46,11 @@
     "price": 250,
     "image": "images/product_1784850372531_187.jpeg",
     "category": "clothes"
+  },
+  {
+    "name": "Bonee nike",
+    "price": 65,
+    "image": "images/product_1784850453459_2.jpeg",
+    "category": "kaskit"
   }
 ]
