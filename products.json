@@ -40,5 +40,11 @@
     "price": 199,
     "image": "images/product_1784850280652_674.jpeg",
     "category": "sandals"
+  },
+  {
+    "name": "Ensemble casa blanca",
+    "price": 250,
+    "image": "images/product_1784850372531_187.jpeg",
+    "category": "clothes"
   }
 ]
