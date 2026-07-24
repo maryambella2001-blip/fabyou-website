@@ -70,5 +70,11 @@
     "price": 299,
     "image": "images/product_1784929344392_687.png",
     "category": "slippers"
+  },
+  {
+    "name": "Casquette gucci",
+    "price": 119,
+    "image": "images/product_1784929445766_522.jpeg",
+    "category": "kaskit"
   }
 ]
