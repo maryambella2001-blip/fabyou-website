@@ -52,5 +52,11 @@
     "price": 65,
     "image": "images/product_1784850453459_2.jpeg",
     "category": "kaskit"
+  },
+  {
+    "name": "Tn noire",
+    "price": 299,
+    "image": "images/product_1784929192904_406.png",
+    "category": "slippers"
   }
 ]
