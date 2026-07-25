@@ -68,5 +68,15 @@
     "price": 299,
     "image": "images/product_1784988717460_923.jpeg",
     "category": "slippers"
+  },
+  {
+    "name": "dsdf",
+    "price": 121,
+    "image": "images/product_1784990317258_915.png",
+    "category": "clothes",
+    "colors": [
+      "rouge",
+      "orange"
+    ]
   }
 ]
