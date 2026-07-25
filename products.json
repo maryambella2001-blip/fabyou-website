@@ -74,5 +74,11 @@
     "price": 299,
     "image": "images/product_1785004080665_539.jpeg",
     "category": "slippers"
+  },
+  {
+    "name": "Nike air max plus tn Aqua bleu",
+    "price": 299,
+    "image": "images/product_1785004188310_697.jpeg",
+    "category": "slippers"
   }
 ]
