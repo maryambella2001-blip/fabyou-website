@@ -110,5 +110,11 @@
     "price": 299,
     "image": "images/product_1785004583927_57.jpeg",
     "category": "slippers"
+  },
+  {
+    "name": "Louis Vuitton LV trainer black",
+    "price": 299,
+    "image": "images/product_1785004662392_705.jpeg",
+    "category": "slippers"
   }
 ]
