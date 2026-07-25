@@ -80,5 +80,11 @@
     "price": 299,
     "image": "images/product_1785004188310_697.jpeg",
     "category": "slippers"
+  },
+  {
+    "name": "Nike air max plus Tn black pink",
+    "price": 299,
+    "image": "images/product_1785004250543_60.jpeg",
+    "category": "slippers"
   }
 ]
