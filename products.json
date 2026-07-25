@@ -70,5 +70,14 @@
     "price": 119,
     "image": "images/product_1784929445766_522.jpeg",
     "category": "kaskit"
+  },
+  {
+    "name": "ismail",
+    "price": 122,
+    "image": "images/product_1784988311052_435.png",
+    "category": "clothes",
+    "colors": [
+      "black"
+    ]
   }
 ]
