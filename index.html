@@ -248,7 +248,9 @@
                         ${sizes.map(s => `<button class="size-btn" onclick="selectSize(this)">${s}</button>`).join("")}
                     </div>` : "";
                 // الألوان (إلا عندو المنتج ألوان محددة من admin)
-                const colorMap = {black:"#1a1a1a",white:"#ffffff",red:"#e63946",blue:"#2563eb",green:"#16a34a",yellow:"#facc15",pink:"#ec4899",purple:"#7c3aed",gray:"#6b7280",grey:"#6b7280",navy:"#1e3a8a",beige:"#e8d5b8",brown:"#92400e",orange:"#f97316",maroon:"#7f1d1d",khaki:"#bca55d"};
+                const colorMap = {black:"#1a1a1a",white:"#ffffff",red:"#e63946",blue:"#2563eb",green:"#16a34a",yellow:"#facc15",pink:"#ec4899",purple:"#7c3aed",gray:"#6b7280",grey:"#6b7280",navy:"#1e3a8a",beige:"#e8d5b8",brown:"#92400e",orange:"#f97316",maroon:"#7f1d1d",khaki:"#bca55d",
+                    // الألوان بالفرنسية
+                    noir:"#1a1a1a",blanc:"#ffffff",rouge:"#e63946",bleu:"#2563eb",bleue:"#2563eb",vert:"#16a34a",jaune:"#facc15",rose:"#ec4899",violet:"#7c3aed",grise:"#6b7280",marine:"#1e3a8a",marron:"#92400e",bordeaux:"#7f1d1d"};
                 let colorHTML = "";
                 if (p.colors && p.colors.length > 0) {
                     colorHTML = `<div class="color-label">Color</div><div class="color-options">` +
