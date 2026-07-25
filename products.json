@@ -104,5 +104,11 @@
     "price": 299,
     "image": "images/product_1785004449835_811.jpeg",
     "category": "slippers"
+  },
+  {
+    "name": "Louis Vuitton LV trainer bleu denim",
+    "price": 299,
+    "image": "images/product_1785004583927_57.jpeg",
+    "category": "slippers"
   }
 ]
