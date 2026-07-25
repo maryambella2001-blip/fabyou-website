@@ -68,15 +68,5 @@
     "price": 299,
     "image": "images/product_1784988717460_923.jpeg",
     "category": "slippers"
-  },
-  {
-    "name": "Ismail",
-    "price": 122,
-    "image": "images/product_1784989375148_663.jpeg",
-    "category": "clothes",
-    "colors": [
-      "Blach",
-      "white"
-    ]
   }
 ]
