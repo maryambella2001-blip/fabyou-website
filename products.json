@@ -116,5 +116,11 @@
     "price": 299,
     "image": "images/product_1785004662392_705.jpeg",
     "category": "slippers"
+  },
+  {
+    "name": "Nike air force 1 low triple black",
+    "price": 299,
+    "image": "images/product_1785004756404_86.jpeg",
+    "category": "slippers"
   }
 ]
