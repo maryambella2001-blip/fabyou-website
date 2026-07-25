@@ -174,9 +174,9 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Colors (الألوان المتوفرة — اختياري)</label>
-                <input type="text" id="productColors" placeholder="black, red, blue, white (افصل بفاصلة)">
-                <small class="small">اكتب أسماء الألوان بالفاصلة. المتوفرة: black, white, red, blue, green, yellow, pink, purple, gray, navy, beige, brown, orange, maroon, khaki</small>
+                <label>Colors (انقر على الألوان اللي بغيتي)</label>
+                <div id="colorPicker" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;padding:12px;background:#f9f9f9;border-radius:8px;"></div>
+                <small class="small" id="selectedColorsText">المختارة: لا شيء</small>
             </div>
             <div class="form-group">
                 <label>Product Image</label>
@@ -207,6 +207,52 @@
             productsFile: "products.json",
             imagesFolder: "images"
         };
+
+        // ================= 🎨 COLOR PICKER =================
+        const AVAILABLE_COLORS = [
+            {name:"noir", label:"Noir", hex:"#1a1a1a"},
+            {name:"blanc", label:"Blanc", hex:"#ffffff"},
+            {name:"gris", label:"Gris", hex:"#6b7280"},
+            {name:"rouge", label:"Rouge", hex:"#e63946"},
+            {name:"bordeaux", label:"Bordeaux", hex:"#7f1d1d"},
+            {name:"rose", label:"Rose", hex:"#ec4899"},
+            {name:"orange", label:"Orange", hex:"#f97316"},
+            {name:"jaune", label:"Jaune", hex:"#facc15"},
+            {name:"beige", label:"Beige", hex:"#e8d5b8"},
+            {name:"marron", label:"Marron", hex:"#92400e"},
+            {name:"vert", label:"Vert", hex:"#16a34a"},
+            {name:"bleu", label:"Bleu", hex:"#2563eb"},
+            {name:"marine", label:"Marine", hex:"#1e3a8a"},
+            {name:"ciel", label:"Ciel", hex:"#7dd3fc"},
+            {name:"violet", label:"Violet", hex:"#7c3aed"}
+        ];
+        let selectedColors = [];
+
+        function renderColorPicker() {
+            const picker = document.getElementById("colorPicker");
+            picker.innerHTML = AVAILABLE_COLORS.map(c => `
+                <div title="${c.label}" data-color="${c.name}" data-hex="${c.hex}" onclick="toggleColor(this)"
+                    style="width:40px;height:40px;border-radius:50%;background:${c.hex};border:3px solid #ddd;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">
+                </div>`).join("");
+        }
+
+        function toggleColor(el) {
+            const color = el.getAttribute("data-color");
+            const idx = selectedColors.indexOf(color);
+            if (idx === -1) {
+                selectedColors.push(color);
+                el.style.borderColor = "#000";
+                el.style.transform = "scale(1.15)";
+                el.innerHTML = "✓";
+                el.style.color = el.getAttribute("data-hex") === "#ffffff" ? "#000" : "#fff";
+            } else {
+                selectedColors.splice(idx, 1);
+                el.style.borderColor = "#ddd";
+                el.style.transform = "scale(1)";
+                el.innerHTML = "";
+            }
+            document.getElementById("selectedColorsText").innerText = "المختارة: " + (selectedColors.length ? selectedColors.join(", ") : "لا شيء");
+        }
 
         // ================= 🔒 GLOBAL LOCK (يمنع العمليات المتزامنة) =================
         let busy = false;
@@ -268,6 +314,7 @@
             document.getElementById("login-screen").style.display = "none";
             document.getElementById("token-screen").style.display = "none";
             document.getElementById("admin-panel").style.display = "block";
+            renderColorPicker();
             loadProducts();
         }
 
@@ -410,9 +457,7 @@
                     const capturedName = name;
                     const capturedPrice = parseInt(price);
                     const capturedCategory = document.getElementById("productCategory").value;
-                    // نقراو الألوان (إيلا كاينين)
-                    const colorsRaw = document.getElementById("productColors").value.trim();
-                    const capturedColors = colorsRaw ? colorsRaw.split(",").map(c => c.trim()).filter(c => c) : [];
+                    const capturedColors = [...selectedColors]; // الألوان المختارة من picker
 
                     // 1) نحدد مسار الصورة (إيلا كاينة)
                     const fileInput = document.getElementById("productImage");
@@ -463,7 +508,10 @@
                     document.getElementById("productName").value = "";
                     document.getElementById("productPrice").value = "";
                     document.getElementById("productImage").value = "";
-                    document.getElementById("productColors").value = "";
+                    // ن-resetio منتقي الألوان
+                    selectedColors = [];
+                    renderColorPicker();
+                    document.getElementById("selectedColorsText").innerText = "المختارة: لا شيء";
                     await loadProducts();
                 } catch (error) {
                     console.error(error);
