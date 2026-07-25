@@ -68,5 +68,11 @@
     "price": 299,
     "image": "images/product_1784988717460_923.jpeg",
     "category": "slippers"
+  },
+  {
+    "name": "Air jordan 4 black cat",
+    "price": 299,
+    "image": "images/product_1785004080665_539.jpeg",
+    "category": "slippers"
   }
 ]
