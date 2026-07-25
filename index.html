@@ -42,6 +42,24 @@
             color: white;
             border-color: #1a1a1a;
         }
+        .color-options {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 8px 0;
+            flex-wrap: wrap;
+        }
+        .color-circle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #ddd;
+            transition: 0.2s;
+        }
+        .color-circle:hover { transform: scale(1.2); border-color: #000; }
+        .color-circle.selected { border-color: #1a1a1a; box-shadow: 0 0 0 3px #ccc; }
+        .color-label { font-size: 11px; color: #888; text-align: center; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
         .no-products, .loading { text-align: center; padding: 60px 20px; color: #666; }
         .header-hamburger { display: none; font-size: 22px; cursor: pointer; margin-left: 15px; }
         @media (max-width: 768px) {
@@ -229,12 +247,23 @@
                     <div class="size-options">
                         ${sizes.map(s => `<button class="size-btn" onclick="selectSize(this)">${s}</button>`).join("")}
                     </div>` : "";
+                // الألوان (إلا عندو المنتج ألوان محددة من admin)
+                const colorMap = {black:"#1a1a1a",white:"#ffffff",red:"#e63946",blue:"#2563eb",green:"#16a34a",yellow:"#facc15",pink:"#ec4899",purple:"#7c3aed",gray:"#6b7280",grey:"#6b7280",navy:"#1e3a8a",beige:"#e8d5b8",brown:"#92400e",orange:"#f97316",maroon:"#7f1d1d",khaki:"#bca55d"};
+                let colorHTML = "";
+                if (p.colors && p.colors.length > 0) {
+                    colorHTML = `<div class="color-label">Color</div><div class="color-options">` +
+                        p.colors.map(c => {
+                            const hex = colorMap[c.toLowerCase()] || c.toLowerCase();
+                            return `<div class="color-circle" style="background:${hex};" data-color="${c}" onclick="selectColor(this)"></div>`;
+                        }).join("") + `</div>`;
+                }
                 return `
                 <div class="card">
                     <div class="product-image">
                         <img src="${resolveImage(p.image)}" alt="${p.name}" onerror="this.src='${PLACEHOLDER}'">
                     </div>
                     <h3>${p.name}</h3>
+                    ${colorHTML}
                     ${sizeHTML}
                     <div class="price-cart">
                         <span>${p.price} DH</span>
@@ -243,6 +272,12 @@
                 </div>
                 `;
             }).join("");
+        }
+
+        function selectColor(el) {
+            const card = el.closest('.card');
+            card.querySelectorAll('.color-circle').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
         }
 
         function selectSize(el) {
@@ -257,10 +292,13 @@
             const price = parseInt(card.querySelector('.price-cart span').innerText);
             const sel = card.querySelector('.size-btn.selected');
             const size = sel ? sel.innerText : "Default";
-            cart.push({ name, price, size, color: "Default" });
+            const selColor = card.querySelector('.color-circle.selected');
+            const color = selColor ? selColor.getAttribute('data-color') : "Default";
+            cart.push({ name, price, size, color });
             localStorage.setItem("cart", JSON.stringify(cart));
             updateCount();
             card.querySelectorAll('.size-btn').forEach(c => c.classList.remove('selected'));
+            card.querySelectorAll('.color-circle').forEach(c => c.classList.remove('selected'));
         }
 
         function updateCount() {
