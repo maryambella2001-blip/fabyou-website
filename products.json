@@ -133,5 +133,15 @@
       "ciel",
       "noir"
     ]
+  },
+  {
+    "name": "Ensemble jordan 🌊☀️",
+    "price": 250,
+    "image": "images/product_1785497334042_830.jpeg",
+    "category": "clothes",
+    "colors": [
+      "ciel",
+      "bleu"
+    ]
   }
 ]
