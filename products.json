@@ -143,5 +143,11 @@
       "ciel",
       "bleu"
     ]
+  },
+  {
+    "name": "Ensemble Nike 🌊",
+    "price": 250,
+    "image": "images/product_1785497431385_891.jpeg",
+    "category": "clothes"
   }
 ]
