@@ -122,5 +122,16 @@
     "price": 299,
     "image": "images/product_1785004756404_86.jpeg",
     "category": "slippers"
+  },
+  {
+    "name": "Dibardo jordan 🌊",
+    "price": 250,
+    "image": "images/product_1785497275415_278.jpeg",
+    "category": "clothes",
+    "colors": [
+      "rose",
+      "ciel",
+      "noir"
+    ]
   }
 ]
